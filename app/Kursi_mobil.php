@@ -4,7 +4,7 @@ namespace TATravel;
 
 use Illuminate\Database\Eloquent\Model;
 
-class User extends Model
+class Kursi_mobil extends Model
 {
-    protected $table = 'user';
+    protected $table = 'kursi_mobil';
 }

@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Controllers\Auth;
+namespace TATravel\Http\Controllers\Auth;
 
-use App\User;
+use TATravel\User;
 use Validator;
-use App\Http\Controllers\Controller;
+use TATravel\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\RegistersUsers;
 
 class RegisterController extends Controller
