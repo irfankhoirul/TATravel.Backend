@@ -4,7 +4,7 @@ namespace TATravel;
 
 use Illuminate\Database\Eloquent\Model;
 
-class User_supir extends Model
+class UserToken extends Model
 {
-    protected $table = 'user_supir';
+    protected $table = 'user_token';
 }

@@ -21,3 +21,4 @@ Route::get('db', function(){
      echo "connected successfully to database ".DB::connection()->getDatabaseName();
    } 
 });
+
