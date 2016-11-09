@@ -14,20 +14,19 @@ use Illuminate\Http\Request;
   |
  */
 
+Route::get('/db-connection', function () {
+    $superAdmin = TATravel\User::find(1);
+    echo $superAdmin->email;
+});
+
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:api');
 
-Route::post('/sa-login', 'SuperAdminController@login');
+//Route::get('/sa-login', 'UserController@login');
 
-//Route::post('sa-login', function() {
-////    echo $request -> request -> all();
-//    echo 'horee';
-//});
+Route::post('/sa-login', 'UserController@login');
 
-//Route::get('sa-login', function() {
-//    echo '<form action="sa" method="POST">';
-////    echo '<input type="submit">';
-//    echo '<input type="hidden" value="' . csrf_token() . '" name="_token">';
-//    echo '</form>';
-//});
+Route::post('/register', 'UserController@register');
+
+Route::post();

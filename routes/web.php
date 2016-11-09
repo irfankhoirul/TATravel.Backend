@@ -16,9 +16,7 @@ Route::get('/', function () {
 });
 
 Route::get('db', function(){
-   if(DB::connection()->getDatabaseName())
-   {
-     echo "connected successfully to database ".DB::connection()->getDatabaseName();
-   } 
+    $superAdmin = TATravel\SuperAdmin::find(1);
+    echo $superAdmin;
 });
 

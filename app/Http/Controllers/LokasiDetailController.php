@@ -8,5 +8,5 @@ use TATravel\Http\Requests;
 
 class LokasiDetailController extends Controller
 {
-    //
+
 }

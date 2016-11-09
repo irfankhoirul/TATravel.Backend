@@ -8,5 +8,8 @@ use TATravel\Http\Requests;
 
 class AdminController extends Controller
 {
-    //
+    public function get()
+    {
+
+    }
 }
