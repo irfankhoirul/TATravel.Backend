@@ -29,4 +29,6 @@ Route::post('/sa-login', 'UserController@login');
 
 Route::post('/register', 'UserController@register');
 
-Route::post();
+/* Get Available Schedule */
+Route::post('/search', 'JadwalPerjalananController@availableSchedule');
+

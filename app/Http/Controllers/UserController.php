@@ -17,8 +17,13 @@ class UserController extends Controller
     /**
      * @param Request $request
      */
-    public function _login(Request $request)
+    public function login(Request $request)
     {
+        $diamonds = User::find(1);
+//        print_r(json_encode($diamonds["original"]));die;
+
+        self::renderResult(1, "Berhasil", $diamonds);
+
         $user = DB::table('user')->where('email', $request->request->get('email'))->first();
         $toBeHashed = $request->request->get('password') . $user->salt;
 
@@ -61,10 +66,10 @@ class UserController extends Controller
 
     }
 
-    public function login(Request $request)
-    {
-
-    }
+//    public function login(Request $request)
+//    {
+//
+//    }
 
     public function loginWithFacebook()
     {
