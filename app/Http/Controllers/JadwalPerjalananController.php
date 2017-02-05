@@ -20,7 +20,6 @@ class JadwalPerjalananController extends Controller
     public function availableSchedule(Request $request)
     {
         $date = $request->request->get('date');
-//        $date = '2016-12-02 09:00:00';
         $schedules = DB::table('jadwal_perjalanan')->whereDate('waktu_keberangkatan', '=', $date)->get()->toArray();
         if (count($schedules) > 0) {
             $newSchedule = array();

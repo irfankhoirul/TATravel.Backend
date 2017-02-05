@@ -14,6 +14,15 @@ use Illuminate\Http\Request;
   |
  */
 
+Route::post('/register', 'UserController@register');
+
+
+
+
+
+
+Route::post('/login', 'UserController@login');
+
 Route::get('/db-connection', function () {
     $superAdmin = TATravel\User::find(1);
     echo $superAdmin->email;
@@ -32,3 +41,11 @@ Route::post('/register', 'UserController@register');
 /* Get Available Schedule */
 Route::post('/search', 'JadwalPerjalananController@availableSchedule');
 
+/* Get Location */
+Route::post('/location', 'LokasiController@availableLocation');
+
+/* Get City */
+Route::post('/city', 'KotaController@availableCity');
+
+/* Get Operator Travel */
+Route::post('/operator', 'OperatorTravelController@getOperatorTravel');
