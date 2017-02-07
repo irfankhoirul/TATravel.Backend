@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 
 use TATravel\Http\Requests;
 
-class RatingPerjalananController extends Controller
+class RatingPerjalananController extends BaseController
 {
     //
 }

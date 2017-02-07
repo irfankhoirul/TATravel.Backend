@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 
 use TATravel\Http\Requests;
 
-class LokasiDetailController extends Controller
+class LokasiDetailController extends BaseController
 {
 
 }

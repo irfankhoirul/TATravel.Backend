@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use TATravel\Http\Requests;
 use Illuminate\Support\Facades\DB;
 
-class KotaController extends Controller {
+class KotaController extends BaseController {
 
     public function availableCity(Request $request) {
         $page = $request->request->get('page');

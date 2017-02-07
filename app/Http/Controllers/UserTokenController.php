@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 
 use TATravel\Http\Requests;
 
-class UserTokenController extends Controller
+class UserTokenController extends BaseController
 {
     //
 }

@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use TATravel\Http\Requests;
 use Illuminate\Support\Facades\DB;
 
-class LokasiController extends Controller {
+class LokasiController extends BaseController {
 
     /**
      * Memberikan list lokasi pemberangkatan dan tujuan dari operator travel

@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 
 use TATravel\Http\Requests;
 
-class SupirController extends Controller
+class SupirController extends BaseController
 {
     //
 }

@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 
 use TATravel\Http\Requests;
 
-class UserFacebookController extends Controller
+class UserFacebookController extends BaseController
 {
     //
 }

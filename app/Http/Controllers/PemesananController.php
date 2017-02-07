@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 
 use TATravel\Http\Requests;
 
-class PemesananController extends Controller
+class PemesananController extends BaseController
 {
     //
 }

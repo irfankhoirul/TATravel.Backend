@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 
 use TATravel\Http\Requests;
 
-class AdminController extends Controller
+class AdminController extends BaseController
 {
     public function get()
     {

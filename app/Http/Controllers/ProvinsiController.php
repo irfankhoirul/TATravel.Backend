@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 
 use TATravel\Http\Requests;
 
-class ProvinsiController extends Controller
+class ProvinsiController extends BaseController
 {
     //
 }

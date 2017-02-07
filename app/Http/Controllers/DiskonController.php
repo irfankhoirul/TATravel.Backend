@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 
 use TATravel\Http\Requests;
 
-class DiskonController extends Controller
+class DiskonController extends BaseController
 {
     //
 }

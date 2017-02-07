@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 
 use TATravel\Http\Requests;
 
-class LogPerjalananController extends Controller
+class LogPerjalananController extends BaseController
 {
     //
 }

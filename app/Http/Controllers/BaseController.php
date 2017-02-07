@@ -3,21 +3,22 @@
 namespace TATravel\Http\Controllers;
 
 use Illuminate\Foundation\Bus\DispatchesJobs;
-use Illuminate\Routing\Controller as BaseController;
+use Illuminate\Routing\Controller;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
-class Controller extends BaseController {
+class BaseController extends Controller {
 
     use AuthorizesRequests,
         DispatchesJobs,
         ValidatesRequests;
 
-    protected function renderResult($code, $message, $data, $isDataArray) {
+    protected function returnJson($code, $message, $technicalMessage, $data) {
         $result = array();
         $result['code'] = $code;
         $result['message'] = $message;
-        if ($isDataArray) {
+        $result['technicalMessage'] = $technicalMessage;
+        if (is_array($data)) {
             $result['datas'] = $data;
         } else {
             $result['data'] = $data;
@@ -27,10 +28,11 @@ class Controller extends BaseController {
         echo(json_encode($result, JSON_PRETTY_PRINT));
     }
 
-    protected function renderResultWithPagination($code, $message, $data, $hasNext, $totalData, $totalPage, $limit, $currentPage, $nextPage) {
+    protected function returnJsonWithPagination($code, $message, $technicalMessage, $data, $hasNext, $totalData, $totalPage, $limit, $currentPage, $nextPage) {
         $result = array();
         $result['code'] = $code;
         $result['message'] = $message;
+        $result['technicalMessage'] = $technicalMessage;
         $result['datas'] = $data;
         $result['dataProvider']['totalData'] = $totalData;
         $result['dataProvider']['totalPage'] = $totalPage;
@@ -38,6 +40,16 @@ class Controller extends BaseController {
         $result['dataProvider']['nextPage'] = $nextPage;
         $result['dataProvider']['hasNext'] = $hasNext;
 
+
+        header('Content-Type: application/json');
+        echo(json_encode($result, JSON_PRETTY_PRINT));
+    }
+
+    protected function returnJsonErrorDataNotValid($errorMessage) {
+        $result = array();
+        $result['code'] = $code;
+        $result['message'] = "Data yang dikirim tidak valid";
+        $result['technicalMessage'] = $errorMessage;
 
         header('Content-Type: application/json');
         echo(json_encode($result, JSON_PRETTY_PRINT));

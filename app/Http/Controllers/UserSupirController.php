@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 
 use TATravel\Http\Requests;
 
-class UserSupirController extends Controller
+class UserSupirController extends BaseController
 {
     //
 }

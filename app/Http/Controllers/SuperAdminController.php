@@ -7,6 +7,6 @@ use Illuminate\Http\Request;
 use TATravel\Http\Requests;
 use TATravel\SuperAdmin;
 
-class SuperAdminController extends Controller {
+class SuperAdminController extends BaseController {
 
 }

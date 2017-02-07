@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 
 use TATravel\Http\Requests;
 
-class NotifikasiController extends Controller
+class NotifikasiController extends BaseController
 {
     //
 }

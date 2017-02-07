@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 
 use TATravel\Http\Requests;
 
-class PublicController extends Controller
+class PublicController extends BaseController
 {
     protected function validateToken($token)
     {

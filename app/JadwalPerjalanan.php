@@ -4,7 +4,7 @@ namespace TATravel;
 
 use Illuminate\Database\Eloquent\Model;
 
-class JadwalPerjalanan extends Model
+class JadwalPerjalanan extends BaseModel
 {
     const STATUS_SCHEDULED = 'S';
     const STATUS_ON_THE_WAY = 'O';

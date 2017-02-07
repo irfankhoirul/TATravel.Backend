@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use TATravel\Http\Requests;
 use Illuminate\Support\Facades\DB;
 
-class OperatorTravelController extends Controller
+class OperatorTravelController extends BaseController
 {
     public function getOperatorTravel(Request $request)
     {

@@ -10,7 +10,7 @@ use PDO;
 use TATravel\Http\Requests;
 use TATravel\JadwalPerjalanan;
 
-class JadwalPerjalananController extends Controller
+class JadwalPerjalananController extends BaseController
 {
 
     /**

@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 
 use TATravel\Http\Requests;
 
-class KursiMobilController extends Controller
+class KursiMobilController extends BaseController
 {
 
     /**
