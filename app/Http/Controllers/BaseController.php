@@ -13,19 +13,33 @@ class BaseController extends Controller {
         DispatchesJobs,
         ValidatesRequests;
 
+    const CODE_SUCCESS = 0;
+    const CODE_ERROR = 1;
+
     protected function returnJson($code, $message, $technicalMessage, $data) {
         $result = array();
         $result['code'] = $code;
         $result['message'] = $message;
         $result['technicalMessage'] = $technicalMessage;
-        if (is_array($data)) {
-            $result['datas'] = $data;
-        } else {
-            $result['data'] = $data;
-        }
+        $result['data'] = $data;
 
         header('Content-Type: application/json');
         echo(json_encode($result, JSON_PRETTY_PRINT));
+        die;
+    }
+
+    protected function returnJsonArray($code, $message, $technicalMessage, $datas) {
+        print_r(json_encode($data));
+        die;
+        $result = array();
+        $result['code'] = $code;
+        $result['message'] = $message;
+        $result['technicalMessage'] = $technicalMessage;
+        $result['datas'] = $datas;
+
+        header('Content-Type: application/json');
+        echo(json_encode($result, JSON_PRETTY_PRINT));
+        die;
     }
 
     protected function returnJsonWithPagination($code, $message, $technicalMessage, $data, $hasNext, $totalData, $totalPage, $limit, $currentPage, $nextPage) {
@@ -43,16 +57,28 @@ class BaseController extends Controller {
 
         header('Content-Type: application/json');
         echo(json_encode($result, JSON_PRETTY_PRINT));
+        die;
     }
 
     protected function returnJsonErrorDataNotValid($errorMessage) {
         $result = array();
-        $result['code'] = $code;
+        $result['code'] = self::CODE_ERROR;
         $result['message'] = "Data yang dikirim tidak valid";
         $result['technicalMessage'] = $errorMessage;
 
         header('Content-Type: application/json');
         echo(json_encode($result, JSON_PRETTY_PRINT));
+        die;
+    }
+
+    protected function returnJsonErrorNotTokenOwner() {
+        $result = array();
+        $result['code'] = self::CODE_ERROR;
+        $result['message'] = "Anda tidak memiliki akses";
+
+        header('Content-Type: application/json');
+        echo(json_encode($result, JSON_PRETTY_PRINT));
+        die;
     }
 
 }
