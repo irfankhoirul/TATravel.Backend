@@ -7,8 +7,8 @@ use Illuminate\Support\Facades\DB;
 
 class BaseModel extends Model {
     
-    const CODE_SUCCESS = 0;
-    const CODE_ERROR = 1;
+    const CODE_SUCCESS = 1;
+    const CODE_ERROR = 0;
     
     const QUERY_SUCCESS = 1;
     

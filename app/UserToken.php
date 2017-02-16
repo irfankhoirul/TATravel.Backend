@@ -8,6 +8,10 @@ use Illuminate\Database\QueryException;
 
 class UserToken extends BaseModel {
 
+    const RESULT_TOKEN_NOT_FOUND = 'Token tidak ditemukan';
+    const RESULT_TOKEN_EXPIRED = 'Session expired';
+
+
     protected $table = 'user_token';
 
     public function createToken($userId, $deviceId) {
@@ -35,7 +39,7 @@ class UserToken extends BaseModel {
 
             // Check if exist
             if (empty($userToken)) {
-                return array(self::CODE_ERROR, 'Token tidak ditemukan', NULL);
+                return array(self::CODE_ERROR, self::RESULT_TOKEN_NOT_FOUND, NULL);
             }
 
             // Check if expired
@@ -45,7 +49,7 @@ class UserToken extends BaseModel {
                 $result = DB::table($this->table)
                     ->where('token', $token)
                     ->update(['status' => self::STATUS_EXPIRED]);
-                return array(self::CODE_ERROR, 'Session sudah kadaluarsa', NULL);
+                return array(self::CODE_ERROR, self::RESULT_TOKEN_EXPIRED, NULL);
             }
         } catch (QueryException $ex) {
             return array(self::CODE_ERROR, NULL, $ex->getMessage());

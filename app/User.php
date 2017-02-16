@@ -31,6 +31,10 @@ class User extends BaseModel {
     const RESULT_GET_PROFILE_FAILED = "Gagal mendapatkan data profil";
 
     protected $table = 'user';
+    
+    public function getUser($id){
+        return DB::table('user')->where('id', $id)->first();
+    }
 
     public function isTokenOwner($id, $token) {
         $userToken = new UserToken();

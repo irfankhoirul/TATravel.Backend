@@ -47,11 +47,15 @@ class Kernel extends HttpKernel
      */
     protected $routeMiddleware = [
         'auth' => \Illuminate\Auth\Middleware\Authenticate::class,
-        'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
+//        'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
         'bindings' => \Illuminate\Routing\Middleware\SubstituteBindings::class,
         'can' => \Illuminate\Auth\Middleware\Authorize::class,
         'guest' => \TATravel\Http\Middleware\RedirectIfAuthenticated::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
-        'authenticated' => \TATravel\Http\Middleware\AuthenticatedMiddleware::class
+        'auth.basic' => \TATravel\Http\Middleware\AuthBasicMiddleware::class,
+        'auth.user' => \TATravel\Http\Middleware\AuthUserMiddleware::class,
+        'auth.driver' => \TATravel\Http\Middleware\AuthDriverMiddleware::class,
+        'auth.admin' => \TATravel\Http\Middleware\AuthAdminMiddleware::class,
+        'auth.super.admin' => \TATravel\Http\Middleware\AuthSuperAdminMiddleware::class
     ];
 }

@@ -13,8 +13,8 @@ class BaseController extends Controller {
         DispatchesJobs,
         ValidatesRequests;
 
-    const CODE_SUCCESS = 0;
-    const CODE_ERROR = 1;
+    const CODE_SUCCESS = 1;
+    const CODE_ERROR = 0;
 
     protected function returnJson($code, $message, $technicalMessage, $data) {
         $result = array();
@@ -29,8 +29,6 @@ class BaseController extends Controller {
     }
 
     protected function returnJsonArray($code, $message, $technicalMessage, $datas) {
-        print_r(json_encode($data));
-        die;
         $result = array();
         $result['code'] = $code;
         $result['message'] = $message;
@@ -47,12 +45,12 @@ class BaseController extends Controller {
         $result['code'] = $code;
         $result['message'] = $message;
         $result['technicalMessage'] = $technicalMessage;
-        $result['datas'] = $data;
         $result['dataProvider']['totalData'] = $totalData;
         $result['dataProvider']['totalPage'] = $totalPage;
         $result['dataProvider']['currentPage'] = $currentPage;
         $result['dataProvider']['nextPage'] = $nextPage;
         $result['dataProvider']['hasNext'] = $hasNext;
+        $result['datas'] = $data;
 
 
         header('Content-Type: application/json');
