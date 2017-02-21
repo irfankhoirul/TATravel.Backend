@@ -28,7 +28,7 @@ class AuthUserMiddleware extends BaseAuthMiddleware {
         $user = new User();
         $userData = $user->getUser($data['id_user']);
         if ($userData['tipe'] != self::USER_TYPE_USER) {
-            return $this->returnJsonErrorAuthentication(self::AUTHENTIFICATION_FAILED);
+            return $this->returnJsonErrorAuthentication(self::AUTHENTICATION_FAILED);
         }
 
         $userToken->incrementRequestCount($token);

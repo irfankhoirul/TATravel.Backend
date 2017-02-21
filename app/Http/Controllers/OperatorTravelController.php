@@ -3,26 +3,40 @@
 namespace TATravel\Http\Controllers;
 
 use Illuminate\Http\Request;
-
 use TATravel\Http\Requests;
 use Illuminate\Support\Facades\DB;
+use Validator;
+use TATravel\OperatorTravel;
 
-class OperatorTravelController extends BaseController
-{
-    public function getOperatorTravel(Request $request)
-    {
-        $operators = DB::table('operator_travel')->get()->toArray();
-        if (count($operators) > 0) {
-            $newOperators = array();
-            foreach ($operators as $operator) {
-                if ($operator['id_kota'] != NULL) {
-                    $operator['kota'] = DB::table('kota')->where('id', $operator['id_kota'])->first();
-                    array_push($newOperators, $operator);
-                }
-            }
-            self::renderResult(1, "Berhasil", $newOperators, TRUE);
-        } else {
-            self::renderResult(0, "Tidak ada data", null, null);
+class OperatorTravelController extends BaseController {
+
+    /**
+     * Post Data :
+     * - CityId     : Required
+     * - Page       : Required
+     */
+    public function getList(Request $request) {
+        $validator = Validator::make($request->all(), [
+                    'cityId' => 'required|integer|min:1',
+                    'page' => 'required|integer|min:1'
+        ]);
+
+        if ($validator->fails()) {
+            $this->returnJsonErrorDataNotValid($validator->errors());
         }
+
+        $page = $request->request->get('page');
+        $cityId = $request->request->get('cityId');
+
+        $operatorTravel = new OperatorTravel();
+        list($status, $message, $technicalMessage, $datas, $dataPage) = $operatorTravel->listOperatorTravel($cityId, $page);
+        $this->returnJsonWithPagination($status, $message, $technicalMessage, $datas, $dataPage);
     }
+
+    public function show($id) {
+        $operatorTravel = new OperatorTravel();
+        list($status, $message, $technicalMessage, $data) = $operatorTravel->show($id);
+        $this->returnJson($status, $message, $technicalMessage, $data);
+    }
+
 }

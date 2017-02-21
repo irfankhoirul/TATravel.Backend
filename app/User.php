@@ -31,15 +31,26 @@ class User extends BaseModel {
     const RESULT_GET_PROFILE_FAILED = "Gagal mendapatkan data profil";
 
     protected $table = 'user';
-    
-    public function getUser($id){
+
+    public function getUser($id) {
         return DB::table('user')->where('id', $id)->first();
     }
 
-    public function isTokenOwner($id, $token) {
+    public function getUserByToken($token) {
+        try {
+            $userToken = new UserToken();
+            list($status, $message, $technicalMessage, $data) = $userToken->getToken($token);
+            $user = DB::table('user')->where('id', $data['id_user'])->first();
+            return array(self::CODE_SUCCESS, NULL, NULL, $user);
+        } catch (QueryException $ex) {
+            return array(self::CODE_ERROR, NULL, $ex->getMessage(), NULL);
+        }
+    }
+
+    public function isTokenOwner($idUser, $token) {
         $userToken = new UserToken();
         list($status, $message, $technicalMessage, $data) = $userToken->getToken($token);
-        if ($data['id_user'] != $id) {
+        if ($data['id_user'] != $idUser) {
             return FALSE;
         }
         return TRUE;

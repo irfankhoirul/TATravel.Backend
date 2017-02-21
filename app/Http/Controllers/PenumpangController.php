@@ -33,7 +33,7 @@ class PenumpangController extends BaseController {
             list($status, $message, $technicalMessage, $data) = $penumpang->createPenumpang($passengerData);
             $this->returnJson($status, $message, $technicalMessage, $data);
         }
-        $this->returnJsonErrorNotTokenOwner();
+        $this->returnJsonErrorNoAccess();
     }
 
     /**
@@ -63,7 +63,7 @@ class PenumpangController extends BaseController {
                 $this->returnJson($status, $message, $technicalMessage, $data);
             }
         }
-        $this->returnJsonErrorNotTokenOwner();
+        $this->returnJsonErrorNoAccess();
     }
 
     public function delete($userId, $id, Request $request) {
@@ -76,17 +76,31 @@ class PenumpangController extends BaseController {
                 $this->returnJson($status, $message, $technicalMessage, NULL);
             }
         }
-        $this->returnJsonErrorNotTokenOwner();
+        $this->returnJsonErrorNoAccess();
     }
 
+    /**
+     * Post Data :
+     * - Page   : Required
+     */
     public function getList($userId, Request $request) {
+        $validator = Validator::make($request->all(), [
+                    'page' => 'required|integer|min:1'
+        ]);
+
+        if ($validator->fails()) {
+            $this->returnJsonErrorDataNotValid($validator->errors());
+        }
+
+        $page = $request->request->get('page');
+
         $user = new User();
         if ($user->isTokenOwner($userId, $request->request->get('token'))) {
             $penumpang = new Penumpang();
-            list($status, $message, $technicalMessage, $datas) = $penumpang->listPenumpang($userId);
-            $this->returnJsonArray($status, $message, $technicalMessage, $datas);
+            list($status, $message, $technicalMessage, $datas, $dataPage) = $penumpang->listPenumpang($userId, $page);
+            $this->returnJsonWithPagination($status, $message, $technicalMessage, $datas, $dataPage);
         }
-        $this->returnJsonErrorNotTokenOwner();
+        $this->returnJsonErrorNoAccess();
     }
 
     /**

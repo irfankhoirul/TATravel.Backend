@@ -145,7 +145,7 @@ class UserController extends BaseController {
             list($status, $message, $technicalMessage, $data) = $user->updateUser($id, $userData);
             $this->returnJson($status, $message, $technicalMessage, $data);
         }
-        $this->returnJsonErrorNotTokenOwner();
+        $this->returnJsonErrorNoAccess();
     }
 
     public function show($id, Request $request) {
@@ -154,7 +154,7 @@ class UserController extends BaseController {
             list($status, $message, $technicalMessage, $data) = $user->show($id);
             $this->returnJson($status, $message, $technicalMessage, $data);
         }
-        $this->returnJsonErrorNotTokenOwner();
+        $this->returnJsonErrorNoAccess();
     }
     
     public function loginDriver(Request $request){

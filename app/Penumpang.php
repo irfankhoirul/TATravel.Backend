@@ -5,6 +5,7 @@ namespace TATravel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\QueryException;
+use TATravel\Util\DataPage;
 
 class Penumpang extends BaseModel {
 
@@ -26,10 +27,43 @@ class Penumpang extends BaseModel {
         }
     }
     
-    public function listPenumpang($userId) {
+    public function listPenumpang($userId, $page) {        
+        $limit = config('constant.DATA_PAGE_QUERY_LIMIT');
         try {
-            $penumpangs = DB::table($this->table)->where('id_user', $userId)->get();
-            return array(self::CODE_SUCCESS, NULL, NULL, $penumpangs);
+            // Count semua data, jika ada kriteria tertentu, masukkan disini
+            $dataCount = DB::table($this->table)
+                    ->where('id_user', $userId)
+                    ->count();
+
+            // Get data sejumlah limit, jika ada kriteria tertentu, masukkan disini
+            $datas = DB::table($this->table)
+                    ->where('id_user', $userId)
+                    ->offset(($page - 1) * $limit)
+                    ->limit($limit)
+                    ->get()
+                    ->toArray();
+
+            // Menghitung total page dari semua data yg bisa diperoleh
+            $totalPage = $limit * $page != $dataCount ? $dataCount / $limit + 1 : $dataCount / $limit;
+            
+            // Menentukan apakah ada page selanjutnya
+            $hasNext = count($datas) == $limit && $limit * $page != $dataCount;
+            if ($hasNext) {
+                $nextPage = $page + 1;
+            } else {
+                $nextPage = -1;
+            }
+
+            // Mengeset dataPage
+            $dataPage = new DataPage();
+            $dataPage = $dataPage->setTotalData($dataCount)
+                    ->setTotalPage(intval($totalPage))
+                    ->setCurrentPage($page)
+                    ->setNextPage($nextPage)
+                    ->get();
+            
+            // Return data
+            return array(self::CODE_SUCCESS, NULL, NULL, $datas, $dataPage);
         } catch (QueryException $ex) {
             return array(self::CODE_ERROR, NULL, $ex->getMessage(), NULL);
         }

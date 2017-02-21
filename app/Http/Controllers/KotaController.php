@@ -11,21 +11,18 @@ class KotaController extends BaseController {
 
     public function getList(Request $request) {
         $validator = Validator::make($request->all(), [
-                    'page' => 'required',
-                    'limit' => 'required'
+                    'page' => 'required|integer|min:1'
         ]);
 
         if ($validator->fails()) {
             $this->returnJsonErrorDataNotValid($validator->errors());
         }
 
-
         $page = $request->request->get('page');
-        $limit = $request->request->get('limit');
 
         $kota = new Kota();
-        list($code, $message, $technicalMessage, $cities, $hasNext, $countData, $totalPage, $limit, $page, $nextPage) = $kota->getList($page, $limit);
-        $this->returnJsonWithPagination($code, $message, $technicalMessage, $cities, $hasNext, $countData, $totalPage, $limit, $page, $nextPage);
+        list($code, $message, $technicalMessage, $cities, $dataPage) = $kota->getList($page);
+        $this->returnJsonWithPagination($code, $message, $technicalMessage, $cities, $dataPage);
     }
 
 }

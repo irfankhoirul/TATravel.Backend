@@ -6,6 +6,7 @@ use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Routing\Controller;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Response;
 
 class BaseController extends Controller {
 
@@ -20,7 +21,9 @@ class BaseController extends Controller {
         $result = array();
         $result['code'] = $code;
         $result['message'] = $message;
-        $result['technicalMessage'] = $technicalMessage;
+        if (config('app.debug')) {
+            $result['debugMessage'] = $technicalMessage;
+        }
         $result['data'] = $data;
 
         header('Content-Type: application/json');
@@ -32,7 +35,9 @@ class BaseController extends Controller {
         $result = array();
         $result['code'] = $code;
         $result['message'] = $message;
-        $result['technicalMessage'] = $technicalMessage;
+        if (config('app.debug')) {
+            $result['debugMessage'] = $technicalMessage;
+        }
         $result['datas'] = $datas;
 
         header('Content-Type: application/json');
@@ -40,16 +45,14 @@ class BaseController extends Controller {
         die;
     }
 
-    protected function returnJsonWithPagination($code, $message, $technicalMessage, $data, $hasNext, $totalData, $totalPage, $limit, $currentPage, $nextPage) {
+    protected function returnJsonWithPagination($code, $message, $technicalMessage, $data, $dataPage) {
         $result = array();
         $result['code'] = $code;
         $result['message'] = $message;
-        $result['technicalMessage'] = $technicalMessage;
-        $result['dataProvider']['totalData'] = $totalData;
-        $result['dataProvider']['totalPage'] = $totalPage;
-        $result['dataProvider']['currentPage'] = $currentPage;
-        $result['dataProvider']['nextPage'] = $nextPage;
-        $result['dataProvider']['hasNext'] = $hasNext;
+        if (config('app.debug')) {
+            $result['debugMessage'] = $technicalMessage;
+        }
+        $result['dataPage'] = $dataPage;
         $result['datas'] = $data;
 
 
@@ -62,14 +65,16 @@ class BaseController extends Controller {
         $result = array();
         $result['code'] = self::CODE_ERROR;
         $result['message'] = "Data yang dikirim tidak valid";
-        $result['technicalMessage'] = $errorMessage;
+        if (config('app.debug')) {
+            $result['debugMessage'] = $errorMessage;
+        }
 
         header('Content-Type: application/json');
         echo(json_encode($result, JSON_PRETTY_PRINT));
         die;
     }
 
-    protected function returnJsonErrorNotTokenOwner() {
+    protected function returnJsonErrorNoAccess() {
         $result = array();
         $result['code'] = self::CODE_ERROR;
         $result['message'] = "Anda tidak memiliki akses";

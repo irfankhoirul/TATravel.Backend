@@ -5,10 +5,35 @@ namespace TATravel\Http\Controllers;
 use Illuminate\Http\Request;
 use TATravel\Http\Requests;
 use Illuminate\Support\Facades\DB;
+use TATravel\Lokasi;
+use Validator;
 
 class LokasiController extends BaseController {
 
     /**
+     * Post Data :
+     * - CityId : Required
+     * - Page   : Required
+     */
+    public function getList($operatorTravelId, Request $request) {
+        $validator = Validator::make($request->all(), [
+                    'cityId' => 'required',
+                    'page' => 'required|integer|min:1'
+        ]);
+
+        if ($validator->fails()) {
+            $this->returnJsonErrorDataNotValid($validator->errors());
+        } 
+
+        $cityId = $request->request->get('cityId');
+        $page = $request->request->get('page');
+
+        $lokasi = new Lokasi();        
+        list($status, $message, $technicalMessage, $datas, $dataPage) = $lokasi->getList($operatorTravelId, $cityId, $page);
+        $this->returnJsonWithPagination($status, $message, $technicalMessage, $datas, $dataPage);
+    }
+
+    /** OLD
      * Memberikan list lokasi pemberangkatan dan tujuan dari operator travel
      * */
     public function availableLocation(Request $request) {
