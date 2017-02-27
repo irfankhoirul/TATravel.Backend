@@ -63,7 +63,7 @@ class Kota extends BaseModel {
             // Return jika tidak ada data
             return array(self::CODE_SUCCESS, NULL, NULL, $cities, $dataPage);
         } catch (QueryException $ex) {
-            return array(self::CODE_ERROR, self::RESULT_GET_CITY_LIST_FAILED, $ex->getMessage(), NULL);
+            return array(self::CODE_ERROR, self::RESULT_GET_CITY_LIST_FAILED, $ex->getMessage(), NULL, NULL);
         }
     }
 

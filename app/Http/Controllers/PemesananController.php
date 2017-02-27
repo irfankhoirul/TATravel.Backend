@@ -53,10 +53,10 @@ class PemesananController extends BaseController {
         if ($validator->fails()) {
             $this->returnJsonErrorDataNotValid($validator->errors());
         }
-        
+
         $user = new User();
         list($status, $message, $technicalMessage, $data) = $user->getUserByToken($request->request->get('token'));
-        
+
         $reservation = new Pemesanan();
         $isBookerUser = $reservation->isBookerUser($data['id'], $request->request->get('idJadwalPerjalanan'));
         if ($isBookerUser) {
@@ -64,6 +64,33 @@ class PemesananController extends BaseController {
             $this->returnJson($status, $message, $technicalMessage, $data);
         }
         $this->returnJsonErrorNoAccess();
+    }
+
+    /**
+     * Post Data :
+     * - Status : Optional // Status jadwal perjalanan
+     * - Page   : Required
+     */
+    public function getList(Request $request) {
+        $validator = Validator::make($request->all(), [
+                    'status' => 'max:1',
+                    'page' => 'required|integer|min:1'
+        ]);
+
+        if ($validator->fails()) {
+            $this->returnJsonErrorDataNotValid($validator->errors());
+        }
+
+        $user = new User();
+        list($status, $message, $technicalMessage, $data) = $user->getUserByToken($request->request->get('token'));
+
+        $userId = $data['id'];
+        $statusSchedule = [$request->request->get('status')]; // Array
+        $page = $request->request->get('page');
+
+        $reservation = new Pemesanan();
+        list($status, $message, $technicalMessage, $datas, $dataPage) = $reservation->getList($userId, $statusSchedule, $page);
+        $this->returnJsonWithPagination($status, $message, $technicalMessage, $datas, $dataPage);
     }
 
 }

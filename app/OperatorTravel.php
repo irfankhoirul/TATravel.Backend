@@ -59,7 +59,7 @@ class OperatorTravel extends BaseModel {
             // Return data
             return array(self::CODE_SUCCESS, NULL, NULL, $datas, $dataPage);
         } catch (QueryException $ex) {
-            return array(self::CODE_ERROR, NULL, $ex->getMessage(), NULL);
+            return array(self::CODE_ERROR, NULL, $ex->getMessage(), NULL, NULL);
         }
     }
 
