@@ -50,6 +50,8 @@ class UserToken extends BaseModel {
                     ->where('token', $token)
                     ->update(['status' => self::STATUS_EXPIRED]);
                 return array(self::CODE_ERROR, self::RESULT_TOKEN_EXPIRED, NULL);
+            } else {
+                return array(self::CODE_SUCCESS, NULL, NULL);
             }
         } catch (QueryException $ex) {
             return array(self::CODE_ERROR, NULL, $ex->getMessage());

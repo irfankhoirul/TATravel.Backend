@@ -22,7 +22,7 @@ class UserController extends BaseController {
      * - Encript password + generated salt
      * - Insert user ke tabel user, set status Registered
      * - Send SMS and Email confirmation code
-     * 
+     *
      * Post Data :
      * - Name           : Required
      * - Phone          : Required
@@ -63,10 +63,12 @@ class UserController extends BaseController {
      * Post Data :
      * - VerificationCode   : Required
      * - Phone              : Required
+     * - deviceSecretId     : Required
      * @param   Request $request Post data dari request
      */
     public function verify(Request $request) {
         $validator = Validator::make($request->all(), [
+            'deviceSecretId' => 'required',
                     'registrationCode' => 'required|max:5',
                     'phone' => 'required|digits_between:3,128',
         ]);
@@ -75,12 +77,13 @@ class UserController extends BaseController {
             $this->returnJsonErrorDataNotValid($validator->errors());
         }
 
+        $verificationData['deviceSecretId'] = $request->request->get('deviceSecretId');
         $verificationData['phone'] = $request->request->get('phone');
         $verificationData['registrationCode'] = $request->request->get('registrationCode');
 
         $user = new User();
-        list($status, $message, $technicalMessage) = $user->verify($verificationData);
-        $this->returnJson($status, $message, $technicalMessage, null);
+        list($status, $message, $technicalMessage, $data) = $user->verify($verificationData);
+        $this->returnJson($status, $message, $technicalMessage, $data);
     }
 
     /**
@@ -156,7 +159,7 @@ class UserController extends BaseController {
         }
         $this->returnJsonErrorNoAccess();
     }
-    
+
     public function loginDriver(Request $request){
         $validator = Validator::make($request->all(), [
                     'deviceSecretId' => 'required',
@@ -177,14 +180,22 @@ class UserController extends BaseController {
         $this->returnJson($status, $message, $technicalMessage, $data);
     }
 
+    public function logout(Request $request)
+    {
+        $token = $request->request->get('token');
+        $user = new User();
+        list($status, $message, $technicalMessage) = $user->logout($token);
+        $this->returnJson($status, $message, $technicalMessage, null);
+    }
+
     /* - - - - - - - - - - - */
 
     public function registerWithFacebook() {
-        
+
     }
 
     public function registerWithGoogle() {
-        
+
     }
 
 //    public function login(Request $request)
@@ -193,27 +204,27 @@ class UserController extends BaseController {
 //    }
 
     public function loginWithFacebook() {
-        
+
     }
 
     public function loginWithGoogle() {
-        
+
     }
 
     public function resendConfirmationCode() {
-        
+
     }
 
     public function forgetPassword() {
-        
+
     }
 
     public function resetPassword() {
-        
+
     }
 
     public function updateProfile() {
-        
+
     }
 
 }

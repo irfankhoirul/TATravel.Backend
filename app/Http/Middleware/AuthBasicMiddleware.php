@@ -3,10 +3,8 @@
 namespace TATravel\Http\Middleware;
 
 use Closure;
-use Validator;
 use TATravel\UserToken;
-use TATravel\User;
-use TATravel\Http\Middleware\BaseAuthMiddleware;
+use Validator;
 
 class AuthBasicMiddleware extends BaseAuthMiddleware {
 
@@ -34,9 +32,9 @@ class AuthBasicMiddleware extends BaseAuthMiddleware {
         if($status === self::CODE_ERROR) {
             return $this->returnJsonErrorAuthentication($message);
         }
-        
+
         $userToken->incrementRequestCount($token);
-        
+
         return $next($request);
     }
 

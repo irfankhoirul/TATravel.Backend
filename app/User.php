@@ -2,11 +2,9 @@
 
 namespace TATravel;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
+use DateTime;
 use Illuminate\Database\QueryException;
-use TATravel\UserDevice;
-use TATravel\UserToken;
+use Illuminate\Support\Facades\DB;
 
 class User extends BaseModel {
 
@@ -25,6 +23,8 @@ class User extends BaseModel {
     const RESULT_WRONG_REGISTRATION_CODE = "Kode registrasi salah";
     const RESULT_LOGIN_FAILED = "Login gagal";
     const RESULT_LOGIN_SUCCESS = "Login berhasil";
+    const RESULT_LOGOUT_FAILED = "Logout gagal";
+    const RESULT_LOGOUT_SUCCESS = "Logout berhasil";
     const RESULT_UPDATE_SUCEESS = "Berhasil mengupdate profil";
     const RESULT_UPDATE_FAILED = "Gagal mengupdate profil";
     const RESULT_GET_PROFILE_SUCCESS = "Berhasil mendapatkan data profil";
@@ -57,9 +57,16 @@ class User extends BaseModel {
     }
 
     public function register($userData) {
-        $salt = str_random(64);
-        $registrationCode = rand(10000, 99999);
         try {
+            $user = DB::table($this->table)->where('nomor_handphone', $userData['phone'])->first();
+            if ($user != NULL) {
+                DB::table('user_device')->where('id_user', $user['id'])->delete();
+                DB::table($this->table)->where('id', $user['id'])->delete();
+            }
+
+            $salt = str_random(64);
+            $registrationCode = rand(10000, 99999);
+
             $id = DB::table($this->table)->insertGetId(
                     ['nama' => $userData['name'],
                         'nomor_handphone' => $userData['phone'],
@@ -105,21 +112,39 @@ class User extends BaseModel {
             $user = DB::table('user')->where('nomor_handphone', $verificationData['phone'])->first();
             if (!empty($user)) {
                 if ($user['registration_step'] == self::USER_REGISTRATION_STEP_VERIFIED) {
-                    return array(self::CODE_ERROR, self::RESULT_VERIFICATION_NO_NEEDED, NULL);
+                    return array(self::CODE_ERROR, self::RESULT_VERIFICATION_NO_NEEDED, NULL, NULL);
                 } else if ($verificationData['registrationCode'] == $user['registration_code']) {
                     $result = DB::table($this->table)
                             ->where('nomor_handphone', $verificationData['phone'])
                             ->update(['registration_step' => self::USER_REGISTRATION_STEP_VERIFIED]);
                     if ($result == self::QUERY_SUCCESS) {
-                        return array(self::CODE_SUCCESS, self::RESULT_VERIFICATION_SUCCESS, NULL);
+                        $userDevice = DB::table('user_device')
+                            ->where('id_user', $user['id'])
+                            ->where('secret_code', $verificationData['deviceSecretId'])
+                            ->first();
+
+                        // Create token
+                        $userToken = new UserToken();
+                        list($statusToken, $messageToken, $technicalMessageToken) = $userToken->createToken($user['id'], $userDevice['id']);
+                        $userToken = DB::table('user_token')->where('id', $technicalMessageToken)->first();
+
+                        // Return User data (session data)
+                        if ($statusToken == self::CODE_SUCCESS) {
+                            $date = new DateTime($userToken['expired_at']);
+                            $userToken['expired_at'] = $date->getTimestamp() * 1000;
+                            $user['token'] = $userToken;
+                            return array(self::CODE_SUCCESS, self::RESULT_VERIFICATION_SUCCESS, NULL, $user);
+                        } else {
+                            return array(self::CODE_SUCCESS, self::RESULT_VERIFICATION_SUCCESS, NULL, NULL);
+                        }
                     } else {
-                        return array(self::CODE_ERROR, self::RESULT_VERIFICATION_FAILED, NULL);
+                        return array(self::CODE_ERROR, self::RESULT_VERIFICATION_FAILED, NULL, NULL);
                     }
                 } else {
-                    return array(self::CODE_ERROR, self::RESULT_WRONG_REGISTRATION_CODE, NULL);
+                    return array(self::CODE_ERROR, self::RESULT_WRONG_REGISTRATION_CODE, NULL, NULL);
                 }
             } else {
-                return array(self::CODE_ERROR, self::RESULT_USER_NOT_FOUND, NULL);
+                return array(self::CODE_ERROR, self::RESULT_USER_NOT_FOUND, NULL, NULL);
             }
         } catch (QueryException $ex) {
             return array(self::CODE_ERROR, self::RESULT_VERIFICATION_FAILED, $ex->getMessage());
@@ -152,10 +177,10 @@ class User extends BaseModel {
                 // Return User data (session data)
                 if ($statusToken == self::CODE_SUCCESS) {
                     $user['token'] = $userToken;
-                    return array(self::CODE_ERROR, self::RESULT_LOGIN_SUCCESS, NULL, $user);
+                    return array(self::CODE_SUCCESS, self::RESULT_LOGIN_SUCCESS, NULL, $user);
                 }
 
-                return array(self::CODE_ERROR, self::RESULT_LOGIN_FAILED, $ex->getMessage(), NULL);
+                return array(self::CODE_ERROR, self::RESULT_LOGIN_FAILED, NULL, NULL);
             }
         } catch (QueryException $ex) {
             return array(self::CODE_ERROR, self::RESULT_LOGIN_FAILED, $ex->getMessage(), NULL);
@@ -188,7 +213,7 @@ class User extends BaseModel {
                     ->update($updateData);
             list($status, $message, $technicalMessage, $data) = $this->show($id);
             return array(self::CODE_SUCCESS, self::RESULT_UPDATE_SUCEESS, NULL, $data);
-        } catch (\Illuminate\Database\QueryException $ex) {
+        } catch (QueryException $ex) {
             return array(self::CODE_ERROR, self::RESULT_UPDATE_FAILED, $ex->getMessage(), NULL);
         }
     }
@@ -251,13 +276,32 @@ class User extends BaseModel {
                     $user['token'] = $userToken;
                     $driver = DB::table('supir')->where('id_user', $user['id'])->first();
                     $driver['user'] = $user;
-                    return array(self::CODE_ERROR, self::RESULT_LOGIN_SUCCESS, NULL, $driver);
+                    return array(self::CODE_SUCCESS, self::RESULT_LOGIN_SUCCESS, NULL, $driver);
                 }
 
                 return array(self::CODE_ERROR, self::RESULT_LOGIN_FAILED, $ex->getMessage(), NULL);
             }
         } catch (QueryException $ex) {
             return array(self::CODE_ERROR, self::RESULT_LOGIN_FAILED, $ex->getMessage(), NULL);
+        }
+    }
+
+    public function logout($token)
+    {
+        try {
+            $tokenData = DB::table('user_token')->where('token', $token)->first();
+            if ($tokenData != NULL) {
+                $result = DB::table('user_token')
+                    ->where('token', $token)
+                    ->update(['status' => self::STATUS_VOID]);
+                if ($result == self::QUERY_SUCCESS) {
+                    return array(self::CODE_SUCCESS, self::RESULT_LOGOUT_SUCCESS, NULL);
+                } else {
+                    return array(self::CODE_ERROR, self::RESULT_LOGOUT_FAILED, NULL);
+                }
+            }
+        } catch (QueryException $ex) {
+            return array(self::CODE_ERROR, self::RESULT_LOGOUT_FAILED, $ex->getMessage());
         }
     }
 

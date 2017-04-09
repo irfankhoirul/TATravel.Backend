@@ -24,7 +24,7 @@ class JadwalPerjalananController extends BaseController {
         $validator = Validator::make($request->all(), [
                     'idDepartureLocation' => 'required|integer|min:1',
                     'idDestinationLocation' => 'required|integer|min:1',
-                    'date' => 'required|numeric',
+            'date' => 'required|numeric', // Long
                     'page' => 'required|integer|min:1'
         ]);
 
