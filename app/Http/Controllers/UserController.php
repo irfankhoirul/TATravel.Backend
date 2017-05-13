@@ -2,12 +2,9 @@
 
 namespace TATravel\Http\Controllers;
 
-use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use TATravel\Http\Requests;
-use TATravel\User;
 use TATravel\UserDevice;
-use Illuminate\Support\Facades\Hash;
 use Validator;
 
 /**

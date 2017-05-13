@@ -64,6 +64,12 @@ Route::post('/user/{userId}/penumpang/delete/{id}', 'PenumpangController@delete'
 Route::post('/user/{userId}/penumpang/list', 'PenumpangController@getList')
     ->middleware('auth.basic', 'auth.user');
 
+// Cek departure availability
+Route::post('/operator-travel/departure-availability', 'OperatorTravelController@getDepartureAvailability');
+
+// Cek destination availability
+Route::post('/operator-travel/destination-availability', 'OperatorTravelController@getDestinationAvailability');
+
 // Get List City
 Route::post('/city/list', 'KotaController@getList')
     ->middleware('auth.basic', 'auth.user');
@@ -140,7 +146,7 @@ Route::post('rate/delete/{id}', 'RatingPerjalananController@delete')
 
 /* OLD */
 Route::get('/db-connection', function () {
-    $superAdmin = TATravel\User::find(1);
+    $superAdmin = TATravel\UserTravel::find(1);
     echo $superAdmin->email;
 });
 

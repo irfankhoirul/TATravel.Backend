@@ -67,7 +67,7 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => TATravel\User::class,
+            'model' => TATravel\UserTravel::class,
         ],
 
         // 'users' => [

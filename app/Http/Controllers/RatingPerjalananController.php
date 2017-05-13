@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use TATravel\Http\Requests;
 use TATravel\RatingPerjalanan;
 use TATravel\Pemesanan;
-use TATravel\User;
+use TATravel\UserTravel;
 use Validator;
 
 class RatingPerjalananController extends BaseController {
@@ -33,7 +33,7 @@ class RatingPerjalananController extends BaseController {
             $this->returnJsonErrorDataNotValid("Rating must be between 1 and 5");
         }
 
-        $user = new User();
+        $user = new UserTravel();
         list($status, $message, $technicalMessage, $data) = $user->getUserByToken($request->request->get('token'));
 
         // Cek apakah user benar-benar merupakan penumpang perjalanan tersebut
@@ -68,7 +68,7 @@ class RatingPerjalananController extends BaseController {
             $this->returnJsonErrorDataNotValid("Rating must be between 1 and 5");
         }
 
-        $user = new User();
+        $user = new UserTravel();
         list($status, $message, $technicalMessage, $data) = $user->getUserByToken($request->request->get('token'));
 
         // Cek apakah user benar-benar merupakan penumpang perjalanan tersebut
@@ -82,7 +82,7 @@ class RatingPerjalananController extends BaseController {
     }
 
     public function delete($id, Request $request) {
-        $user = new User();
+        $user = new UserTravel();
         list($status, $message, $technicalMessage, $data) = $user->getUserByToken($request->request->get('token'));
 
         // Cek apakah user benar-benar merupakan penumpang perjalanan tersebut

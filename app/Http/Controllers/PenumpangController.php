@@ -4,7 +4,7 @@ namespace TATravel\Http\Controllers;
 
 use Illuminate\Http\Request;
 use TATravel\Penumpang;
-use TATravel\User;
+use TATravel\UserTravel;
 use TATravel\Http\Requests;
 use Validator;
 
@@ -27,7 +27,7 @@ class PenumpangController extends BaseController {
         $passengerData['id_user'] = $userId;
         $passengerData['nama'] = $request->request->get('name');
 
-        $user = new User();
+        $user = new UserTravel();
         if ($user->isTokenOwner($userId, $request->request->get('token'))) {
             $penumpang = new Penumpang();
             list($status, $message, $technicalMessage, $data) = $penumpang->createPenumpang($passengerData);
@@ -54,7 +54,7 @@ class PenumpangController extends BaseController {
         $passengerData['id'] = $id;
         $passengerData['nama'] = $request->request->get('name');
 
-        $user = new User();
+        $user = new UserTravel();
         if ($user->isTokenOwner($userId, $request->request->get('token'))) {
             $penumpang = new Penumpang();
             list($status, $message, $technicalMessage, $data) = $penumpang->getPenumpang($id);
@@ -67,7 +67,7 @@ class PenumpangController extends BaseController {
     }
 
     public function delete($userId, $id, Request $request) {
-        $user = new User();
+        $user = new UserTravel();
         if ($user->isTokenOwner($userId, $request->request->get('token'))) {
             $penumpang = new Penumpang();
             list($status, $message, $technicalMessage, $data) = $penumpang->getPenumpang($id);
@@ -94,7 +94,7 @@ class PenumpangController extends BaseController {
 
         $page = $request->request->get('page');
 
-        $user = new User();
+        $user = new UserTravel();
         if ($user->isTokenOwner($userId, $request->request->get('token'))) {
             $penumpang = new Penumpang();
             list($status, $message, $technicalMessage, $datas, $dataPage) = $penumpang->listPenumpang($userId, $page);

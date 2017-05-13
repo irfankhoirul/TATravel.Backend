@@ -2,7 +2,6 @@
 
 namespace TATravel\Http\Middleware;
 
-use Closure;
 use TATravel\Http\Middleware\AuthMiddleware;
 
 class BaseAuthMiddleware {

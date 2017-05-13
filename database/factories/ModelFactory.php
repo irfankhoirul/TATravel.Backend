@@ -11,7 +11,7 @@
 |
 */
 
-$factory->define(TATravel\User::class, function (Faker\Generator $faker) {
+$factory->define(TATravel\UserTravel::class, function (Faker\Generator $faker) {
     static $password;
 
     return [

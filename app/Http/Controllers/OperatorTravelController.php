@@ -39,4 +39,44 @@ class OperatorTravelController extends BaseController {
         $this->returnJson($status, $message, $technicalMessage, $data);
     }
 
+    public function getDepartureAvailability(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'latitude' => 'required',
+            'longitude' => 'required'
+        ]);
+
+        if ($validator->fails()) {
+            $this->returnJsonErrorDataNotValid($validator->errors());
+        }
+
+        $latitude = $request->request->get('latitude');
+        $longitude = $request->request->get('longitude');
+
+        $operatorTravel = new OperatorTravel();
+        list($status, $message, $technicalMessage, $data) = $operatorTravel->getDepartureAvailability($latitude, $longitude);
+        $this->returnJsonArray($status, $message, $technicalMessage, $data);
+    }
+
+    public function getDestinationAvailability(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'latitude' => 'required',
+            'longitude' => 'required',
+            'id_operator_travel' => 'required'
+        ]);
+
+        if ($validator->fails()) {
+            $this->returnJsonErrorDataNotValid($validator->errors());
+        }
+
+        $latitude = $request->request->get('latitude');
+        $longitude = $request->request->get('longitude');
+        $idOperatorTravel = $request->request->get('id_operator_travel');
+
+        $operatorTravel = new OperatorTravel();
+        list($status, $message, $technicalMessage, $data) = $operatorTravel->getDestinationAvailability($latitude, $longitude, $idOperatorTravel);
+        $this->returnJsonArray($status, $message, $technicalMessage, $data);
+    }
+
 }

@@ -30,7 +30,7 @@ return [
     ],
 
     'stripe' => [
-        'model' => TATravel\User::class,
+        'model' => TATravel\UserTravel::class,
         'key' => env('STRIPE_KEY'),
         'secret' => env('STRIPE_SECRET'),
     ],

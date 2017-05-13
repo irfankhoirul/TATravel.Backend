@@ -2,7 +2,7 @@
 
 namespace TATravel\Http\Controllers\Auth;
 
-use TATravel\User;
+use TATravel\UserTravel;
 use Validator;
 use TATravel\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\RegistersUsers;
@@ -58,11 +58,11 @@ class RegisterController extends Controller
      * Create a new user instance after a valid registration.
      *
      * @param  array  $data
-     * @return User
+     * @return UserTravel
      */
     protected function create(array $data)
     {
-        return User::create([
+        return UserTravel::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => bcrypt($data['password']),

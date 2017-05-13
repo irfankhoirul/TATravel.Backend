@@ -4,7 +4,7 @@ namespace TATravel\Http\Controllers;
 
 use Illuminate\Http\Request;
 use TATravel\Http\Requests;
-use TATravel\User;
+use TATravel\UserTravel;
 use TATravel\Pemesanan;
 use TATravel\Pembayaran;
 use Validator;
@@ -28,7 +28,7 @@ class PemesananController extends BaseController {
             $this->returnJsonErrorDataNotValid($validator->errors());
         }
 
-        $user = new User();
+        $user = new UserTravel();
         list($status, $message, $technicalMessage, $data) = $user->getUserByToken($request->request->get('token'));
 
         $reservation = new Pemesanan();
@@ -54,7 +54,7 @@ class PemesananController extends BaseController {
             $this->returnJsonErrorDataNotValid($validator->errors());
         }
 
-        $user = new User();
+        $user = new UserTravel();
         list($status, $message, $technicalMessage, $data) = $user->getUserByToken($request->request->get('token'));
 
         $reservation = new Pemesanan();
@@ -81,7 +81,7 @@ class PemesananController extends BaseController {
             $this->returnJsonErrorDataNotValid($validator->errors());
         }
 
-        $user = new User();
+        $user = new UserTravel();
         list($status, $message, $technicalMessage, $data) = $user->getUserByToken($request->request->get('token'));
 
         $userId = $data['id'];

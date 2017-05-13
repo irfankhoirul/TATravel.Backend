@@ -33,11 +33,15 @@ class Penumpang extends BaseModel {
             // Count semua data, jika ada kriteria tertentu, masukkan disini
             $dataCount = DB::table($this->table)
                     ->where('id_user', $userId)
+//                    ->groupBy('id')
+//                    ->orderBy('id', 'asc')
                     ->count();
 
             // Get data sejumlah limit, jika ada kriteria tertentu, masukkan disini
             $datas = DB::table($this->table)
                     ->where('id_user', $userId)
+//                    ->groupBy('id')
+//                    ->orderBy('id', 'asc')
                     ->offset(($page - 1) * $limit)
                     ->limit($limit)
                     ->get()

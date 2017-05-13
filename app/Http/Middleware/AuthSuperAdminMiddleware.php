@@ -4,7 +4,7 @@ namespace TATravel\Http\Middleware;
 
 use Closure;
 use TATravel\UserToken;
-use TATravel\User;
+use TATravel\UserTravel;
 use TATravel\Http\Middleware\BaseAuthMiddleware;
 
 class AuthSuperAdminMiddleware extends BaseAuthMiddleware
@@ -25,8 +25,8 @@ class AuthSuperAdminMiddleware extends BaseAuthMiddleware
         if ($status == self::CODE_ERROR) {
             return $this->returnJsonErrorAuthentication($message);
         }
-        
-        $user = new User();
+
+        $user = new UserTravel();
         $userData = $user->getUser($data['id_user']);
         if ($userData['tipe'] != self::USER_TYPE_SUPER_ADMIN) {
             return $this->returnJsonErrorAuthentication(self::AUTHENTICATION_FAILED);

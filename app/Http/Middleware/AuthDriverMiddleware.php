@@ -4,7 +4,7 @@ namespace TATravel\Http\Middleware;
 
 use Closure;
 use TATravel\UserToken;
-use TATravel\User;
+use TATravel\UserTravel;
 use TATravel\Http\Middleware\BaseAuthMiddleware;
 
 class AuthDriverMiddleware extends BaseAuthMiddleware {
@@ -24,8 +24,8 @@ class AuthDriverMiddleware extends BaseAuthMiddleware {
         if ($status == self::CODE_ERROR) {
             return $this->returnJsonErrorAuthentication($message);
         }
-        
-        $user = new User();
+
+        $user = new UserTravel();
         $userData = $user->getUser($data['id_user']);
         if ($userData['tipe'] != self::USER_TYPE_DRIVER) {
             return $this->returnJsonErrorAuthentication(self::AUTHENTICATION_FAILED);

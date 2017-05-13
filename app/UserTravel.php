@@ -6,7 +6,8 @@ use DateTime;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 
-class User extends BaseModel {
+class UserTravel extends BaseModel
+{
 
     const USER_TYPE_USER = 'U';
     const USER_TYPE_ADMIN = 'A';
@@ -19,8 +20,9 @@ class User extends BaseModel {
     const RESULT_VERIFICATION_SUCCESS = "Verifikasi berhasil";
     const RESULT_VERIFICATION_FAILED = "Verifikasi gagal";
     const RESULT_VERIFICATION_NO_NEEDED = "Anda sudah terverifikasi";
-    const RESULT_USER_NOT_FOUND = "User tidak ditemukan";
+    const RESULT_USER_NOT_FOUND = "Akun tidak ditemukan";
     const RESULT_WRONG_REGISTRATION_CODE = "Kode registrasi salah";
+    const RESULT_WRONG_PASSWORD = "Password tidak sesuai";
     const RESULT_LOGIN_FAILED = "Login gagal";
     const RESULT_LOGIN_SUCCESS = "Login berhasil";
     const RESULT_LOGOUT_FAILED = "Logout gagal";
@@ -155,6 +157,10 @@ class User extends BaseModel {
         // Validasi login
         try {
             $user = DB::table($this->table)->where('nomor_handphone', $userData['phone'])->first();
+            if (empty($user)) {
+                return array(self::CODE_ERROR, self::RESULT_USER_NOT_FOUND, NULL, NULL);
+            }
+
             if ($user['password'] == hash('sha512', $user['salt'] . hash('md5', $userData['password'] . $user['salt']))) {
                 // Get device by secret id, jika tidak ada, add
                 $device = DB::table('user_device')->where('secret_code', $deviceSecretCode)->first();
@@ -176,11 +182,15 @@ class User extends BaseModel {
 
                 // Return User data (session data)
                 if ($statusToken == self::CODE_SUCCESS) {
+                    $date = new DateTime($userToken['expired_at']);
+                    $userToken['expired_at'] = $date->getTimestamp() * 1000;
                     $user['token'] = $userToken;
                     return array(self::CODE_SUCCESS, self::RESULT_LOGIN_SUCCESS, NULL, $user);
                 }
 
                 return array(self::CODE_ERROR, self::RESULT_LOGIN_FAILED, NULL, NULL);
+            } else {
+                return array(self::CODE_ERROR, self::RESULT_WRONG_PASSWORD, NULL, NULL);
             }
         } catch (QueryException $ex) {
             return array(self::CODE_ERROR, self::RESULT_LOGIN_FAILED, $ex->getMessage(), NULL);
