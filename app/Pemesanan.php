@@ -7,31 +7,75 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Database\QueryException;
 use TATravel\Util\DataPage;
 
-class Pemesanan extends BaseModel {
+class Pemesanan extends BaseModel
+{
 
     protected $table = 'pemesanan';
 
-    public function reservation($idUser, $idJadwalPerjalanan) {
+    public function reservation($idUser, $idJadwalPerjalanan, $passengerIds, $seatIds,
+                                $pickUpLat, $pickUpLon, $pickUpAddress, $takeLat, $takeLon, $takeAddress)
+    {
         $reservationCode = "RES-" . time() . rand(100, 999);
         try {
             $id = DB::table($this->table)->insertGetId(
-                    ['id_user' => $idUser,
-                        'id_jadwal_perjalanan' => $idJadwalPerjalanan,
-                        'kode_pemesanan' => $reservationCode
-                    ]
+                ['id_user' => $idUser,
+                    'id_jadwal_perjalanan' => $idJadwalPerjalanan,
+                    'kode_pemesanan' => $reservationCode
+                ]
             );
+
+            // Create data penumpang perjalanan
+            $passengerIds = json_decode($passengerIds, TRUE);
+            for ($i = 0; $i < count($passengerIds); $i++) {
+
+                $idPenumpangPerjalanan = DB::table('penumpang_perjalanan')->insertGetId(
+                    ['id_pemesanan' => $id,
+                        'id_penumpang' => $passengerIds[$i]
+                    ]
+                );
+
+                // Insert data lokasi penjemputan
+                $idPickUpLocation = DB::table('lokasi_detail')->insertGetId(
+                    ['id_penumpang_perjalanan' => $idPenumpangPerjalanan,
+                        'tipe' => 'P',
+                        'alamat' => $pickUpAddress,
+                        'latitude' => $pickUpLat,
+                        'longitude' => $pickUpLon
+                    ]
+                );
+
+                // Insert data lokasi pengantaran
+                $idTakeLocation = DB::table('lokasi_detail')->insertGetId(
+                    ['id_penumpang_perjalanan' => $idPenumpangPerjalanan,
+                        'tipe' => 'T',
+                        'alamat' => $takeAddress,
+                        'latitude' => $takeLat,
+                        'longitude' => $takeLon
+                    ]
+                );
+            }
+
+            // Update seat, set unavailable
+            $seatIds = json_decode($seatIds, TRUE);
+            for ($i = 0; $i < count($seatIds); $i++) {
+                DB::table('kursi_perjalanan')
+                    ->where('id', $seatIds[$i])
+                    ->update(['status' => 'U']);
+            }
+
             return array(self::CODE_SUCCESS, NULL, $id);
         } catch (QueryException $ex) {
             return array(self::CODE_ERROR, NULL, $ex->getMessage());
         }
     }
 
-    public function isBookerUser($userId, $scheduleId) {
+    public function isBookerUser($userId, $scheduleId)
+    {
         try {
             $reservation = DB::table($this->table)
-                    ->where('id_user', $userId)
-                    ->where('id_jadwal_perjalanan', $scheduleId)
-                    ->first();
+                ->where('id_user', $userId)
+                ->where('id_jadwal_perjalanan', $scheduleId)
+                ->first();
 
             if ($reservation != NULL) {
                 return TRUE;
@@ -43,21 +87,22 @@ class Pemesanan extends BaseModel {
         }
     }
 
-    public function show($id) {
+    public function show($id)
+    {
         try {
             $reservation = DB::table($this->table)
-                    ->where('id', $id)
-                    ->first();
+                ->where('id', $id)
+                ->first();
             if ($reservation != NULL) {
                 $reservation['jadwal_perjalanan'] = DB::table('jadwal_perjalanan')
-                        ->where('id', $reservation['id_jadwal_perjalanan'])
-                        ->first();
+                    ->where('id', $reservation['id_jadwal_perjalanan'])
+                    ->first();
                 $reservation['jadwal_perjalanan']['operator_travel'] = DB::table('operator_travel')
-                        ->where('id', $reservation['jadwal_perjalanan']['id_operator_travel'])
-                        ->first();
+                    ->where('id', $reservation['jadwal_perjalanan']['id_operator_travel'])
+                    ->first();
                 $reservation['pembayaran'] = DB::table('pembayaran')
-                        ->where('id_pemesanan', $id)
-                        ->first();
+                    ->where('id_pemesanan', $id)
+                    ->first();
                 return array(self::CODE_SUCCESS, NULL, NULL, $reservation);
             } else {
                 return array(self::CODE_ERROR, "Tidak ada data", NULL, NULL);
@@ -67,7 +112,8 @@ class Pemesanan extends BaseModel {
         }
     }
 
-    public function getList($userId, $status, $page) {
+    public function getList($userId, $status, $page)
+    {
         $limit = config('constant.DATA_PAGE_QUERY_LIMIT');
         try {
             if ($status == NULL) {
@@ -81,20 +127,20 @@ class Pemesanan extends BaseModel {
             }
             // Count semua data, jika ada kriteria tertentu, masukkan disini
             $dataCount = DB::table($this->table)
-                    ->where('id_user', $userId)
-                    ->join('jadwal_perjalanan', 'jadwal_perjalanan.id', '=', 'pemesanan.id_jadwal_perjalanan')
-                    ->whereIn('jadwal_perjalanan.status', $status)
-                    ->count();
+                ->where('id_user', $userId)
+                ->join('jadwal_perjalanan', 'jadwal_perjalanan.id', '=', 'pemesanan.id_jadwal_perjalanan')
+                ->whereIn('jadwal_perjalanan.status', $status)
+                ->count();
 
             // Get data sejumlah limit, jika ada kriteria tertentu, masukkan disini
             $datas = DB::table($this->table)
-                    ->where('id_user', $userId)
-                    ->join('jadwal_perjalanan', 'jadwal_perjalanan.id', '=', 'pemesanan.id_jadwal_perjalanan')
-                    ->whereIn('jadwal_perjalanan.status', $status)
-                    ->offset(($page - 1) * $limit)
-                    ->limit($limit)
-                    ->get()
-                    ->toArray();
+                ->where('id_user', $userId)
+                ->join('jadwal_perjalanan', 'jadwal_perjalanan.id', '=', 'pemesanan.id_jadwal_perjalanan')
+                ->whereIn('jadwal_perjalanan.status', $status)
+                ->offset(($page - 1) * $limit)
+                ->limit($limit)
+                ->get()
+                ->toArray();
 
             // Menghitung total page dari semua data yg bisa diperoleh
             $totalPage = $limit * $page != $dataCount ? $dataCount / $limit + 1 : $dataCount / $limit;
@@ -110,10 +156,10 @@ class Pemesanan extends BaseModel {
             // Mengeset dataPage
             $dataPage = new DataPage();
             $dataPage = $dataPage->setTotalData($dataCount)
-                    ->setTotalPage(intval($totalPage))
-                    ->setCurrentPage($page)
-                    ->setNextPage($nextPage)
-                    ->get();
+                ->setTotalPage(intval($totalPage))
+                ->setCurrentPage($page)
+                ->setNextPage($nextPage)
+                ->get();
 
             // Return data
             return array(self::CODE_SUCCESS, NULL, NULL, $datas, $dataPage);

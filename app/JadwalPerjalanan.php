@@ -4,6 +4,7 @@ namespace TATravel;
 
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
+use Jenssegers\Date\Date;
 use TATravel\Util\DataPage;
 use TATravel\Util\DistanceUtil;
 
@@ -59,8 +60,14 @@ class JadwalPerjalanan extends BaseModel
 
             $distanceUtil = new DistanceUtil();
             for ($i = 0; $i < count($datas); $i++) {
+                $datas[$i]['operator_travel'] = DB::table('operator_travel')
+                    ->where('id', $datas[$i]['id_operator_travel'])
+                    ->first();
                 $datas[$i]['waktu_keberangkatan'] = date("d - m - Y H:i", strtotime($datas[$i]['waktu_keberangkatan']));
                 $datas[$i]['waktu_kedatangan'] = date("d - m - Y H:i", strtotime($datas[$i]['waktu_kedatangan']));
+
+//                $newDate = Date::createFromFormat("d - m - Y H:i", $datas[$i]['waktu_keberangkatan']);
+//                print_r($newDate->format('d M y H:i'));die;
 
                 $datas[$i]['lokasi_pemberangkatan'] = DB::table('lokasi')
                     ->where('id', $datas[$i]['id_lokasi_pemberangkatan'])

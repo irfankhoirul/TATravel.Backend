@@ -5,6 +5,7 @@ namespace TATravel\Http\Controllers;
 use Illuminate\Http\Request;
 use TATravel\Http\Requests;
 use TATravel\UserDevice;
+use TATravel\UserTravel;
 use Validator;
 
 /**
@@ -46,7 +47,7 @@ class UserController extends BaseController {
         $userData['email'] = $request->request->get('email');
         $userData['password'] = $request->request->get('password');
 
-        $user = new User();
+        $user = new UserTravel();
         list($status, $message, $technicalMessage) = $user->register($userData);
         if ($status == self::CODE_SUCCESS) {
             $userDevice = new UserDevice();
@@ -78,7 +79,7 @@ class UserController extends BaseController {
         $verificationData['phone'] = $request->request->get('phone');
         $verificationData['registrationCode'] = $request->request->get('registrationCode');
 
-        $user = new User();
+        $user = new UserTravel();
         list($status, $message, $technicalMessage, $data) = $user->verify($verificationData);
         $this->returnJson($status, $message, $technicalMessage, $data);
     }
@@ -105,7 +106,7 @@ class UserController extends BaseController {
         $userData['password'] = $request->request->get('password');
         $deviceSecretCode = $request->request->get('deviceSecretId');
 
-        $user = new User();
+        $user = new UserTravel();
         list($status, $message, $technicalMessage, $data) = $user->login($userData, $deviceSecretCode);
         $this->returnJson($status, $message, $technicalMessage, $data);
     }
@@ -140,7 +141,7 @@ class UserController extends BaseController {
         $userData['id_kota'] = $request->request->get('cityid');
         $userData['id_provinsi'] = $request->request->get('provinceId');
 
-        $user = new User();
+        $user = new UserTravel();
         if ($user->isTokenOwner($id, $request->request->get('token'))) {
             list($status, $message, $technicalMessage, $data) = $user->updateUser($id, $userData);
             $this->returnJson($status, $message, $technicalMessage, $data);
@@ -149,7 +150,7 @@ class UserController extends BaseController {
     }
 
     public function show($id, Request $request) {
-        $user = new User();
+        $user = new UserTravel();
         if ($user->isTokenOwner($id, $request->request->get('token'))) {
             list($status, $message, $technicalMessage, $data) = $user->show($id);
             $this->returnJson($status, $message, $technicalMessage, $data);
@@ -172,7 +173,7 @@ class UserController extends BaseController {
         $userData['password'] = $request->request->get('password');
         $deviceSecretCode = $request->request->get('deviceSecretId');
 
-        $user = new User();
+        $user = new UserTravel();
         list($status, $message, $technicalMessage, $data) = $user->loginDriver($userData, $deviceSecretCode);
         $this->returnJson($status, $message, $technicalMessage, $data);
     }
@@ -180,7 +181,7 @@ class UserController extends BaseController {
     public function logout(Request $request)
     {
         $token = $request->request->get('token');
-        $user = new User();
+        $user = new UserTravel();
         list($status, $message, $technicalMessage) = $user->logout($token);
         $this->returnJson($status, $message, $technicalMessage, null);
     }

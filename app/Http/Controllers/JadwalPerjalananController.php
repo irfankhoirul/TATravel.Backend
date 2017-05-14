@@ -2,14 +2,12 @@
 
 namespace TATravel\Http\Controllers;
 
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use PDO;
 use TATravel\Http\Requests;
 use TATravel\JadwalPerjalanan;
-use Validator;
 use TATravel\UserTravel;
+use Validator;
 
 class JadwalPerjalananController extends BaseController
 {

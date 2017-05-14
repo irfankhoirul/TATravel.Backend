@@ -111,7 +111,7 @@ Route::post('/schedule/{id}/seat/list', 'KursiPerjalananController@getList')
     ->middleware('auth.basic', 'auth.user');
 
 // Set seat booked
-Route::post('/seat/book/{id}', 'KursiPerjalananController@bookSeat')
+Route::post('/seat/book', 'KursiPerjalananController@bookSeat')
     ->middleware('auth.basic', 'auth.user');
 
 // Order
