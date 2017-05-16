@@ -96,7 +96,7 @@ class PemesananController extends BaseController
     public function getList(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'status' => 'max:1',
+//            'status' => 'max:1',
             'page' => 'required|integer|min:1'
         ]);
 
@@ -108,11 +108,12 @@ class PemesananController extends BaseController
         list($status, $message, $technicalMessage, $data) = $user->getUserByToken($request->request->get('token'));
 
         $userId = $data['id'];
-        $statusSchedule = [$request->request->get('status')]; // Array
+//        $statusSchedule = [$request->request->get('status')]; // Array
         $page = $request->request->get('page');
 
         $reservation = new Pemesanan();
-        list($status, $message, $technicalMessage, $datas, $dataPage) = $reservation->getList($userId, $statusSchedule, $page);
+        list($status, $message, $technicalMessage, $datas, $dataPage) = $reservation->getList($userId, /*$statusSchedule,*/
+            $page);
         $this->returnJsonWithPagination($status, $message, $technicalMessage, $datas, $dataPage);
     }
 

@@ -8,12 +8,12 @@ use Illuminate\Database\QueryException;
 
 class Pembayaran extends BaseModel {
 
-    protected $table = 'pembayaran';
-    
     const PAYMENT_STATUS_PAID = 'P';
     const PAYMENT_STATUS_UNPAID = 'U';
+    const PAYMENT_STATUS_TIMEOUT = 'O';
     const RESERVATION_SUCCESS = 'Berhasil melakukan pemesanan';
     const RESERATION_FAILED = 'Gagal melakukan pemesanan';
+    protected $table = 'pembayaran';
 
     public function reservation($reservationId) {
         $paymentCode = rand(10, 99) . time() . rand(10, 99);

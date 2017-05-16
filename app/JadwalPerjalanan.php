@@ -193,29 +193,40 @@ class JadwalPerjalanan extends BaseModel
     public function show($id)
     {
         try {
-            $location = DB::table($this->table)
+            $data = DB::table($this->table)
                 ->where('id', $id)
                 ->first();
 
-            if ($location != NULL) {
-                $location['lokasi_pemberangkatan'] = DB::table('lokasi')
-                    ->where('id', $location['id_lokasi_pemberangkatan'])
+            $data['waktu_keberangkatan'] = date("d - m - Y H:i", strtotime($data['waktu_keberangkatan']));
+            $data['waktu_kedatangan'] = date("d - m - Y H:i", strtotime($data['waktu_kedatangan']));
+
+            if ($data != NULL) {
+                $data['lokasi_pemberangkatan'] = DB::table('lokasi')
+                    ->where('id', $data['id_lokasi_pemberangkatan'])
                     ->first();
 
-                $location['lokasi_tujuan'] = DB::table('lokasi')
-                    ->where('id', $location['id_lokasi_tujuan'])
+                $data['lokasi_pemberangkatan']['kota'] = DB::table('kota')
+                    ->where('id', $data['lokasi_pemberangkatan']['id_kota'])
                     ->first();
 
-                $location['operator_travel'] = DB::table('operator_travel')
-                    ->where('id', $location['id_operator_travel'])
+                $data['lokasi_tujuan'] = DB::table('lokasi')
+                    ->where('id', $data['id_lokasi_tujuan'])
                     ->first();
 
-                $location['mobil'] = DB::table('mobil')
-                    ->where('id', $location['id_mobil'])
+                $data['lokasi_tujuan']['kota'] = DB::table('kota')
+                    ->where('id', $data['lokasi_tujuan']['id_kota'])
+                    ->first();
+
+                $data['operator_travel'] = DB::table('operator_travel')
+                    ->where('id', $data['id_operator_travel'])
+                    ->first();
+
+                $data['mobil'] = DB::table('mobil')
+                    ->where('id', $data['id_mobil'])
                     ->first();
             }
 
-            return array(self::CODE_SUCCESS, NULL, NULL, $location);
+            return array(self::CODE_SUCCESS, NULL, NULL, $data);
         } catch (QueryException $ex) {
             return array(self::CODE_ERROR, NULL, $ex->getMessage(), NULL);
         }

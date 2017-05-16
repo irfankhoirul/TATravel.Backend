@@ -25,6 +25,7 @@ class Pemesanan extends BaseModel
             );
 
             // Create data penumpang perjalanan
+            $seatIds = json_decode($seatIds, TRUE);
             $passengerIds = json_decode($passengerIds, TRUE);
             for ($i = 0; $i < count($passengerIds); $i++) {
 
@@ -34,13 +35,19 @@ class Pemesanan extends BaseModel
                     ]
                 );
 
+                DB::table('kursi_perjalanan')
+                    ->where('id', $seatIds[$i])
+                    ->update(['status' => 'U', 'id_penumpang_perjalanan' => $idPenumpangPerjalanan]);
+
                 // Insert data lokasi penjemputan
                 $idPickUpLocation = DB::table('lokasi_detail')->insertGetId(
                     ['id_penumpang_perjalanan' => $idPenumpangPerjalanan,
                         'tipe' => 'P',
                         'alamat' => $pickUpAddress,
                         'latitude' => $pickUpLat,
-                        'longitude' => $pickUpLon
+                        'longitude' => $pickUpLon,
+                        'id_jadwal_perjalanan' => $idJadwalPerjalanan,
+                        'id_pemesanan' => $id
                     ]
                 );
 
@@ -50,17 +57,17 @@ class Pemesanan extends BaseModel
                         'tipe' => 'T',
                         'alamat' => $takeAddress,
                         'latitude' => $takeLat,
-                        'longitude' => $takeLon
+                        'longitude' => $takeLon,
+                        'id_jadwal_perjalanan' => $idJadwalPerjalanan,
+                        'id_pemesanan' => $id
                     ]
                 );
             }
 
             // Update seat, set unavailable
-            $seatIds = json_decode($seatIds, TRUE);
+
             for ($i = 0; $i < count($seatIds); $i++) {
-                DB::table('kursi_perjalanan')
-                    ->where('id', $seatIds[$i])
-                    ->update(['status' => 'U']);
+
             }
 
             return array(self::CODE_SUCCESS, NULL, $id);
@@ -112,35 +119,78 @@ class Pemesanan extends BaseModel
         }
     }
 
-    public function getList($userId, $status, $page)
+    public function getList($userId, /*$status,*/
+                            $page)
     {
         $limit = config('constant.DATA_PAGE_QUERY_LIMIT');
         try {
-            if ($status == NULL) {
-                $status = [
-                    JadwalPerjalanan::STATUS_SCHEDULED,
-                    JadwalPerjalanan::STATUS_ON_THE_WAY,
-                    JadwalPerjalanan::STATUS_ARRIVED,
-                    JadwalPerjalanan::STATUS_CANCELLED,
-                    JadwalPerjalanan::STATUS_DELAYED,
-                ];
-            }
+//            if ($status == NULL) {
+//                $status = [
+//                    JadwalPerjalanan::STATUS_SCHEDULED,
+//                    JadwalPerjalanan::STATUS_ON_THE_WAY,
+//                    JadwalPerjalanan::STATUS_ARRIVED,
+//                    JadwalPerjalanan::STATUS_CANCELLED,
+//                    JadwalPerjalanan::STATUS_DELAYED,
+//                ];
+//            }
             // Count semua data, jika ada kriteria tertentu, masukkan disini
             $dataCount = DB::table($this->table)
                 ->where('id_user', $userId)
-                ->join('jadwal_perjalanan', 'jadwal_perjalanan.id', '=', 'pemesanan.id_jadwal_perjalanan')
-                ->whereIn('jadwal_perjalanan.status', $status)
+//                ->join('jadwal_perjalanan', 'jadwal_perjalanan.id', '=', 'pemesanan.id_jadwal_perjalanan')
+//                ->whereIn('jadwal_perjalanan.status', $status)
                 ->count();
 
             // Get data sejumlah limit, jika ada kriteria tertentu, masukkan disini
             $datas = DB::table($this->table)
                 ->where('id_user', $userId)
-                ->join('jadwal_perjalanan', 'jadwal_perjalanan.id', '=', 'pemesanan.id_jadwal_perjalanan')
-                ->whereIn('jadwal_perjalanan.status', $status)
+//                ->join('jadwal_perjalanan', 'jadwal_perjalanan.id', '=', 'pemesanan.id_jadwal_perjalanan')
+//                ->whereIn('jadwal_perjalanan.status', $status)
                 ->offset(($page - 1) * $limit)
                 ->limit($limit)
                 ->get()
                 ->toArray();
+
+            $jadwalPerjalanan = new JadwalPerjalanan();
+            for ($i = 0; $i < count($datas); $i++) {
+                $datas[$i]['user'] = DB::table('user')
+                    ->where('id', $datas[$i]['id_user'])
+                    ->first();
+                $datas[$i]['jadwal_perjalanan'] = $jadwalPerjalanan->show($datas[$i]['id_jadwal_perjalanan'])[3];
+                $datas[$i]['pembayaran'] = DB::table('pembayaran')
+                    ->where('id_pemesanan', $datas[$i]['id'])
+                    ->first();
+                $datas[$i]['lokasi_penjemputan'] = DB::table('lokasi_detail')
+                    ->where('tipe', 'P')
+                    ->where('id_jadwal_perjalanan', $datas[$i]['jadwal_perjalanan']['id'])
+                    ->where('id_pemesanan', $datas[$i]['id'])
+                    ->first();
+                $datas[$i]['lokasi_pengantaran'] = DB::table('lokasi_detail')
+                    ->where('tipe', 'T')
+                    ->where('id_jadwal_perjalanan', $datas[$i]['jadwal_perjalanan']['id'])
+                    ->where('id_pemesanan', $datas[$i]['id'])
+                    ->first();
+
+                $tmpPenumpangPerjalanan = DB::table('penumpang_perjalanan')
+                    ->where('id_pemesanan', $datas[$i]['id'])
+                    ->get();
+                $datas[$i]['penumpang_perjalanan'] = json_decode(json_encode($tmpPenumpangPerjalanan), true);
+                for ($j = 0; $j < count($datas[$i]['penumpang_perjalanan']); $j++) {
+                    $tmpPenumpang = DB::table('penumpang')
+                        ->where('id', $datas[$i]['penumpang_perjalanan'][$j]['id_penumpang'])
+                        ->first();
+
+                    $datas[$i]['penumpang_perjalanan'][$j]['penumpang'] = json_decode(json_encode($tmpPenumpang), true);
+
+                    $tmpKursiPerjalanan = DB::table('kursi_perjalanan')
+                        ->where('id_penumpang_perjalanan', $datas[$i]['penumpang_perjalanan'][$j]['id'])
+                        ->first();
+
+                    $datas[$i]['penumpang_perjalanan'][$j]['kursi_perjalanan'] = json_decode(json_encode($tmpKursiPerjalanan), true);
+                    $datas[$i]['penumpang_perjalanan'][$j]['kursi_perjalanan']['kursi_mobil'] = DB::table('kursi_mobil')
+                        ->where('id', $datas[$i]['penumpang_perjalanan'][$j]['kursi_perjalanan']['id_kursi_mobil'])
+                        ->first();
+                }
+            }
 
             // Menghitung total page dari semua data yg bisa diperoleh
             $totalPage = $limit * $page != $dataCount ? $dataCount / $limit + 1 : $dataCount / $limit;
