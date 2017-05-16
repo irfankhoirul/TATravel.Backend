@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Input;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 /*
   |--------------------------------------------------------------------------
@@ -14,17 +15,65 @@ use Illuminate\Http\Request;
   |
  */
 
+Route::get('sendemail', function () {
+
+    $email_sender = 'tatravel123@gmail.com';
+    $email_pass = 'gvftfohsgjnizsff';
+    $email_to = 'irfankhoirul@gmail.com';
+
+    // Backup your default mailer
+    $backup = Mail::getSwiftMailer();
+
+    try {
+        //https://accounts.google.com/DisplayUnlockCaptcha
+        // Setup your gmail mailer
+        $transport = \Swift_SmtpTransport::newInstance('smtp.gmail.com', 587, 'tls');
+        $transport->setUsername($email_sender);
+        $transport->setPassword($email_pass);
+
+        // Any other mailer configuration stuff needed...
+        $gmail = new Swift_Mailer($transport);
+
+        // Set the mailer as gmail
+        Mail::setSwiftMailer($gmail);
+
+        $data['emailto'] = $email_to;
+        $data['sender'] = $email_sender;
+        //Sender dan Reply harus sama
+
+        Mail::raw('text', function ($message) use ($data) {
+
+            $message->from($data['sender'], 'Laravel Mailer');
+            $message->to($data['emailto'])
+                ->replyTo($data['sender'], 'Laravel Mailer')
+                ->subject('Test Email');
+        });
+
+        echo 'The mail has been sent successfully';
+
+    } catch (\Swift_TransportException $e) {
+        $response = $e->getMessage();
+        echo $response;
+    }
+
+
+    // Restore your original mailer
+    Mail::setSwiftMailer($backup);
+
+});
+
 
 /* Sprint 1 */
 
 // Register
 Route::post('/register', 'UserController@register');
 
-// Verify phone number
+// Verify
 Route::post('/verify', 'UserController@verify');
 
-// Login by Phone
+// Login
 Route::post('/login', 'UserController@login');
+
 
 // Update user (profile)
 Route::post('/user/update/{id}', 'UserController@update')

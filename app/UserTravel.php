@@ -5,6 +5,8 @@ namespace TATravel;
 use DateTime;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Swift_Mailer;
 
 class UserTravel extends BaseModel
 {
@@ -34,11 +36,13 @@ class UserTravel extends BaseModel
 
     protected $table = 'user';
 
-    public function getUser($id) {
+    public function getUser($id)
+    {
         return DB::table('user')->where('id', $id)->first();
     }
 
-    public function getUserByToken($token) {
+    public function getUserByToken($token)
+    {
         try {
             $userToken = new UserToken();
             list($status, $message, $technicalMessage, $data) = $userToken->getToken($token);
@@ -49,7 +53,8 @@ class UserTravel extends BaseModel
         }
     }
 
-    public function isTokenOwner($idUser, $token) {
+    public function isTokenOwner($idUser, $token)
+    {
         $userToken = new UserToken();
         list($status, $message, $technicalMessage, $data) = $userToken->getToken($token);
         if ($data['id_user'] != $idUser) {
@@ -58,36 +63,50 @@ class UserTravel extends BaseModel
         return TRUE;
     }
 
-    public function register($userData) {
+    public function register($userData)
+    {
         try {
-            $user = DB::table($this->table)->where('nomor_handphone', $userData['phone'])->first();
-            if ($user != NULL) {
-                DB::table('user_device')->where('id_user', $user['id'])->delete();
-                DB::table($this->table)->where('id', $user['id'])->delete();
+            if ($userData['phone'] != NULL) {
+                $user = DB::table($this->table)->where('nomor_handphone', $userData['phone'])->first();
+                if ($user != NULL) {
+                    return array(self::CODE_ERROR, "Nomor Handphone yang Anda masukkan sudah digunakan untuk registrasi", NULL);
+                }
+            }
+
+            if ($userData['email'] != NULL) {
+                $user = DB::table($this->table)->where('email', $userData['email'])->first();
+                if ($user != NULL) {
+                    return array(self::CODE_ERROR, "Alamat Email yang Anda masukkan sudah digunakan untuk registrasi", NULL);
+                }
             }
 
             $salt = str_random(64);
             $registrationCode = rand(10000, 99999);
 
             $id = DB::table($this->table)->insertGetId(
-                    ['nama' => $userData['name'],
-                        'nomor_handphone' => $userData['phone'],
-                        'email' => $userData['email'],
-                        'password' => hash('sha512', $salt . hash('md5', $userData['password'] . $salt)),
-                        'salt' => $salt,
-                        'registration_step' => self::USER_REGISTRATION_STEP_REGISTERED,
-                        'tipe' => self::USER_TYPE_USER,
-                        'registration_code' => $registrationCode
-                    ]
+                ['nama' => $userData['name'],
+                    'nomor_handphone' => $userData['phone'],
+                    'email' => $userData['email'],
+                    'password' => hash('sha512', $salt . hash('md5', $userData['password'] . $salt)),
+                    'salt' => $salt,
+                    'registration_step' => self::USER_REGISTRATION_STEP_REGISTERED,
+                    'tipe' => self::USER_TYPE_USER,
+                    'registration_code' => $registrationCode
+                ]
             );
-            $this->sendSmsVerification($registrationCode, $userData['phone']);
+            if ($userData['phone'] != NULL) {
+                $this->sendSmsVerification($registrationCode, $userData['phone']);
+            } else if ($userData['email'] != NULL) {
+                $this->sendEmailVerification($registrationCode, $userData['email']);
+            }
             return array(self::CODE_SUCCESS, self::RESULT_REGISTRATION_SUCCESS, $id);
         } catch (QueryException $ex) {
             return array(self::CODE_ERROR, self::RESULT_REGISTRATION_FAILED, $ex->getMessage());
         }
     }
 
-    public function sendSmsVerification($registrationCode, $phone) {
+    public function sendSmsVerification($registrationCode, $phone)
+    {
         // Script http API SMS Reguler Zenziva
         $userkey = 'mu9z1h'; // userkey lihat di zenziva
         $passkey = '15c202f3734b5cf7dc18cfcaace6c5bc'; // set passkey di zenziva
@@ -109,16 +128,75 @@ class UserTravel extends BaseModel
         curl_close($curlHandle);
     }
 
-    public function verify($verificationData) {
+    public function sendEmailVerification($registrationCode, $targetEmail)
+    {
+        $email_sender = 'tatravel123@gmail.com';
+        $email_pass = 'gvftfohsgjnizsff';
+        $email_to = $targetEmail;
+
+        // Backup your default mailer
+        $backup = Mail::getSwiftMailer();
+
         try {
-            $user = DB::table('user')->where('nomor_handphone', $verificationData['phone'])->first();
+            //https://accounts.google.com/DisplayUnlockCaptcha
+            // Setup your gmail mailer
+            $transport = \Swift_SmtpTransport::newInstance('smtp.gmail.com', 587, 'tls');
+            $transport->setUsername($email_sender);
+            $transport->setPassword($email_pass);
+
+            // Any other mailer configuration stuff needed...
+            $gmail = new Swift_Mailer($transport);
+
+            // Set the mailer as gmail
+            Mail::setSwiftMailer($gmail);
+
+            $data['emailto'] = $email_to;
+            $data['sender'] = $email_sender;
+            //Sender dan Reply harus sama
+
+            $message = 'Kode Registrasi TATravel Anda : ' . $registrationCode;
+            Mail::raw($message, function ($message) use ($data) {
+
+                $message->from($data['sender'], 'TATravel');
+                $message->to($data['emailto'])
+                    ->replyTo($data['sender'], 'TATravel')
+                    ->subject('Kode Registrasi TATravel');
+            });
+
+//            echo 'The mail has been sent successfully';
+
+        } catch (\Swift_TransportException $e) {
+            $response = $e->getMessage();
+//            echo $response;
+        }
+
+        // Restore your original mailer
+        Mail::setSwiftMailer($backup);
+    }
+
+    public function verify($verificationData)
+    {
+        try {
+            if ($verificationData['email'] != NULL) {
+                $user = DB::table('user')->where('email', $verificationData['email'])->first();
+            } else if ($verificationData['phone'] != NULL) {
+                $user = DB::table('user')->where('nomor_handphone', $verificationData['phone'])->first();
+            }
+
             if (!empty($user)) {
                 if ($user['registration_step'] == self::USER_REGISTRATION_STEP_VERIFIED) {
                     return array(self::CODE_ERROR, self::RESULT_VERIFICATION_NO_NEEDED, NULL, NULL);
                 } else if ($verificationData['registrationCode'] == $user['registration_code']) {
-                    $result = DB::table($this->table)
+                    if ($verificationData['email'] != NULL) {
+                        $result = DB::table($this->table)
+                            ->where('email', $verificationData['email'])
+                            ->update(['registration_step' => self::USER_REGISTRATION_STEP_VERIFIED]);
+                    } else if ($verificationData['phone'] != NULL) {
+                        $result = DB::table($this->table)
                             ->where('nomor_handphone', $verificationData['phone'])
                             ->update(['registration_step' => self::USER_REGISTRATION_STEP_VERIFIED]);
+                    }
+
                     if ($result == self::QUERY_SUCCESS) {
                         $userDevice = DB::table('user_device')
                             ->where('id_user', $user['id'])
@@ -153,15 +231,26 @@ class UserTravel extends BaseModel
         }
     }
 
-    public function login($userData, $deviceSecretCode) {
+    public function login($userData, $deviceSecretCode)
+    {
         // Validasi login
         try {
-            $user = DB::table($this->table)->where('nomor_handphone', $userData['phone'])->first();
-            if (empty($user)) {
-                return array(self::CODE_ERROR, self::RESULT_USER_NOT_FOUND, NULL, NULL);
+            $user = NULL;
+            if ($userData['phone'] != NULL) {
+                $user = DB::table($this->table)->where('nomor_handphone', $userData['phone'])->first();
+                if (empty($user)) {
+                    return array(self::CODE_ERROR, self::RESULT_USER_NOT_FOUND, NULL, NULL);
+                }
             }
 
-            if ($user['password'] == hash('sha512', $user['salt'] . hash('md5', $userData['password'] . $user['salt']))) {
+            if ($userData['email'] != NULL) {
+                $user = DB::table($this->table)->where('email', $userData['email'])->first();
+                if (empty($user)) {
+                    return array(self::CODE_ERROR, self::RESULT_USER_NOT_FOUND, NULL, NULL);
+                }
+            }
+
+            if ($user != NULL && $user['password'] == hash('sha512', $user['salt'] . hash('md5', $userData['password'] . $user['salt']))) {
                 // Get device by secret id, jika tidak ada, add
                 $device = DB::table('user_device')->where('secret_code', $deviceSecretCode)->first();
                 if (empty($device)) {
@@ -197,7 +286,8 @@ class UserTravel extends BaseModel
         }
     }
 
-    public function updateUser($id, $userData) {
+    public function updateUser($id, $userData)
+    {
         $updateData = Array();
         $updateData['nama'] = $userData['nama'];
         if (!empty($userData['email'])) {
@@ -219,8 +309,8 @@ class UserTravel extends BaseModel
 
         try {
             $result = DB::table($this->table)
-                    ->where('id', $id)
-                    ->update($updateData);
+                ->where('id', $id)
+                ->update($updateData);
             list($status, $message, $technicalMessage, $data) = $this->show($id);
             return array(self::CODE_SUCCESS, self::RESULT_UPDATE_SUCEESS, NULL, $data);
         } catch (QueryException $ex) {
@@ -228,7 +318,8 @@ class UserTravel extends BaseModel
         }
     }
 
-    public function show($id) {
+    public function show($id)
+    {
         try {
             $user = DB::table($this->table)->where('id', $id)->first();
             if (!empty($user['id_kota'])) {
@@ -255,7 +346,8 @@ class UserTravel extends BaseModel
         }
     }
 
-    public function loginDriver($userData, $deviceSecretCode) {
+    public function loginDriver($userData, $deviceSecretCode)
+    {
         // Validasi login
         try {
             $user = DB::table($this->table)->where('nomor_handphone', $userData['phone'])->first();

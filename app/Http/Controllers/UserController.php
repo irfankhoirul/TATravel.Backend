@@ -12,7 +12,8 @@ use Validator;
  * Class UserController
  * @package TATravel\Http\Controllers
  */
-class UserController extends BaseController {
+class UserController extends BaseController
+{
 
     /**
      * Step :
@@ -29,13 +30,14 @@ class UserController extends BaseController {
      * - deviceSecretId : Required
      * @param   Request $request Post data dari request
      */
-    public function register(Request $request) {
+    public function register(Request $request)
+    {
         $validator = Validator::make($request->all(), [
-                    'name' => 'required|max:128',
-                    'phone' => 'required|digits_between:3,128',
-                    'email' => 'email|max:128',
-                    'password' => 'required',
-                    'deviceSecretId' => 'required'
+            'name' => 'required|max:128',
+            'phone' => 'digits_between:3,128',
+            'email' => 'email|max:128',
+            'password' => 'required',
+            'deviceSecretId' => 'required'
         ]);
 
         if ($validator->fails()) {
@@ -47,14 +49,19 @@ class UserController extends BaseController {
         $userData['email'] = $request->request->get('email');
         $userData['password'] = $request->request->get('password');
 
-        $user = new UserTravel();
-        list($status, $message, $technicalMessage) = $user->register($userData);
-        if ($status == self::CODE_SUCCESS) {
-            $userDevice = new UserDevice();
-            list($statusDevice, $messageDevice, $technicalMessageDevice) = $userDevice->registerDevice($request->request->get('deviceSecretId'), $technicalMessage);
+        if ($userData['phone'] == NULL && $userData['email'] == NULL) {
+            $this->returnJsonErrorDataNotValid("Nomor Handphone atau Email tidak boleh kosong!");
+        } else {
+
+            $user = new UserTravel();
+            list($status, $message, $technicalMessage) = $user->register($userData);
+            if ($status == self::CODE_SUCCESS) {
+                $userDevice = new UserDevice();
+                list($statusDevice, $messageDevice, $technicalMessageDevice) = $userDevice->registerDevice($request->request->get('deviceSecretId'), $technicalMessage);
+                $this->returnJson($status, $message, $technicalMessage, null);
+            }
             $this->returnJson($status, $message, $technicalMessage, null);
         }
-        $this->returnJson($status, $message, $technicalMessage, null);
     }
 
     /**
@@ -64,11 +71,13 @@ class UserController extends BaseController {
      * - deviceSecretId     : Required
      * @param   Request $request Post data dari request
      */
-    public function verify(Request $request) {
+    public function verify(Request $request)
+    {
         $validator = Validator::make($request->all(), [
             'deviceSecretId' => 'required',
-                    'registrationCode' => 'required|max:5',
-                    'phone' => 'required|digits_between:3,128',
+            'registrationCode' => 'required|max:5',
+            'phone' => 'digits_between:3,128',
+            'email' => 'email|max:128'
         ]);
 
         if ($validator->fails()) {
@@ -77,11 +86,16 @@ class UserController extends BaseController {
 
         $verificationData['deviceSecretId'] = $request->request->get('deviceSecretId');
         $verificationData['phone'] = $request->request->get('phone');
+        $verificationData['email'] = $request->request->get('email');
         $verificationData['registrationCode'] = $request->request->get('registrationCode');
 
-        $user = new UserTravel();
-        list($status, $message, $technicalMessage, $data) = $user->verify($verificationData);
-        $this->returnJson($status, $message, $technicalMessage, $data);
+        if ($verificationData['phone'] == NULL && $verificationData['email'] == NULL) {
+            $this->returnJsonErrorDataNotValid("Nomor Handphone atau Email tidak boleh kosong!");
+        } else {
+            $user = new UserTravel();
+            list($status, $message, $technicalMessage, $data) = $user->verify($verificationData);
+            $this->returnJson($status, $message, $technicalMessage, $data);
+        }
     }
 
     /**
@@ -91,11 +105,13 @@ class UserController extends BaseController {
      * - deviceSecretCode   : Required
      * @param Request $request
      */
-    public function login(Request $request) {
+    public function login(Request $request)
+    {
         $validator = Validator::make($request->all(), [
-                    'deviceSecretId' => 'required',
-                    'phone' => 'required|digits_between:3,128',
-                    'password' => 'required',
+            'deviceSecretId' => 'required',
+            'phone' => 'digits_between:3,128',
+            'email' => 'email|max:128',
+            'password' => 'required'
         ]);
 
         if ($validator->fails()) {
@@ -103,12 +119,17 @@ class UserController extends BaseController {
         }
 
         $userData['phone'] = $request->request->get('phone');
+        $userData['email'] = $request->request->get('email');
         $userData['password'] = $request->request->get('password');
         $deviceSecretCode = $request->request->get('deviceSecretId');
 
-        $user = new UserTravel();
-        list($status, $message, $technicalMessage, $data) = $user->login($userData, $deviceSecretCode);
-        $this->returnJson($status, $message, $technicalMessage, $data);
+        if ($userData['phone'] == NULL && $userData['email'] == NULL) {
+            $this->returnJsonErrorDataNotValid("Nomor Handphone atau Email tidak boleh kosong!");
+        } else {
+            $user = new UserTravel();
+            list($status, $message, $technicalMessage, $data) = $user->login($userData, $deviceSecretCode);
+            $this->returnJson($status, $message, $technicalMessage, $data);
+        }
     }
 
     /**
@@ -120,14 +141,15 @@ class UserController extends BaseController {
      * - CityId     : Optional
      * - ProvinceId : Optional
      */
-    public function update($id, Request $request) {
+    public function update($id, Request $request)
+    {
         $validator = Validator::make($request->all(), [
-                    'name' => 'required|max:128',
-                    'email' => 'max:128',
-                    'password' => 'max:128',
-                    'alamat' => 'max:128',
-                    'cityid' => 'digits',
-                    'provinceId' => 'digits'
+            'name' => 'required|max:128',
+            'email' => 'max:128',
+            'password' => 'max:128',
+            'alamat' => 'max:128',
+            'cityid' => 'digits',
+            'provinceId' => 'digits'
         ]);
 
         if ($validator->fails()) {
@@ -149,7 +171,8 @@ class UserController extends BaseController {
         $this->returnJsonErrorNoAccess();
     }
 
-    public function show($id, Request $request) {
+    public function show($id, Request $request)
+    {
         $user = new UserTravel();
         if ($user->isTokenOwner($id, $request->request->get('token'))) {
             list($status, $message, $technicalMessage, $data) = $user->show($id);
@@ -158,11 +181,12 @@ class UserController extends BaseController {
         $this->returnJsonErrorNoAccess();
     }
 
-    public function loginDriver(Request $request){
+    public function loginDriver(Request $request)
+    {
         $validator = Validator::make($request->all(), [
-                    'deviceSecretId' => 'required',
-                    'phone' => 'required|digits_between:3,128',
-                    'password' => 'required',
+            'deviceSecretId' => 'required',
+            'phone' => 'required|digits_between:3,128',
+            'password' => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -188,11 +212,13 @@ class UserController extends BaseController {
 
     /* - - - - - - - - - - - */
 
-    public function registerWithFacebook() {
+    public function registerWithFacebook()
+    {
 
     }
 
-    public function registerWithGoogle() {
+    public function registerWithGoogle()
+    {
 
     }
 
@@ -201,27 +227,33 @@ class UserController extends BaseController {
 //
 //    }
 
-    public function loginWithFacebook() {
+    public function loginWithFacebook()
+    {
 
     }
 
-    public function loginWithGoogle() {
+    public function loginWithGoogle()
+    {
 
     }
 
-    public function resendConfirmationCode() {
+    public function resendConfirmationCode()
+    {
 
     }
 
-    public function forgetPassword() {
+    public function forgetPassword()
+    {
 
     }
 
-    public function resetPassword() {
+    public function resetPassword()
+    {
 
     }
 
-    public function updateProfile() {
+    public function updateProfile()
+    {
 
     }
 
