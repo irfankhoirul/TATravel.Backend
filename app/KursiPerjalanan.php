@@ -74,7 +74,7 @@ class KursiPerjalanan extends BaseModel
             // 
             // 
             // Cek jika kursi masih available
-            $counter = 0;
+            $counterAvailable = 0;
             foreach ($seat as $item) {
                 $updateTime = strtotime($item['updated_at']);
                 $now = new \DateTime(null, new \DateTimeZone('Asia/Jakarta'));
@@ -84,19 +84,35 @@ class KursiPerjalanan extends BaseModel
                 if ($item['status'] == self::STATUS_AVAILABLE ||
                     ($item['updated_at'] != NULL && $bookTimeDifference > self::BOOKING_TIME_LIMIT)
                 ) {
-                    DB::table($this->table)
-                        ->where('id', $item['id'])
-                        ->update(['status' => self::STATUS_BOOKED]);
-
-                    $counter++;
+                    $counterAvailable++;
                 } else {
                     return array(self::CODE_ERROR, "Gagal memilih kursi", NULL);
                 }
-
             }
 
-            if (count($seat) == $counter) {
+            if ($counterAvailable == count($seat)) {
+                $counter = 0;
+                foreach ($seat as $item) {
+                    $updateTime = strtotime($item['updated_at']);
+                    $now = new \DateTime(null, new \DateTimeZone('Asia/Jakarta'));
+                    $nowMicro = strtotime($now->format('m/d/Y H:i:s'));
+                    $bookTimeDifference = $nowMicro - $updateTime;
+
+                    if ($item['status'] == self::STATUS_AVAILABLE ||
+                        ($item['updated_at'] != NULL && $bookTimeDifference > self::BOOKING_TIME_LIMIT)
+                    ) {
+                        DB::table($this->table)
+                            ->where('id', $item['id'])
+                            ->update(['status' => self::STATUS_BOOKED]);
+
+                        $counter++;
+                    } else {
+                        return array(self::CODE_ERROR, "Gagal memilih kursi", NULL);
+                    }
+                }
                 return array(self::CODE_SUCCESS, NULL, NULL);
+            } else {
+                return array(self::CODE_ERROR, "Kursi yang anda pilih tidak tersedia", NULL);
             }
         } catch (QueryException $ex) {
             return array(self::CODE_ERROR, NULL, $ex->getMessage());

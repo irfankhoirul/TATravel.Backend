@@ -59,7 +59,7 @@ class PemesananController extends BaseController
             list($status, $message, $paymentId) = $payment->reservation($reservationId);
             $technicalMessage = $paymentId;
         }
-        $this->returnJsonArray($status, $message, $technicalMessage, NULL);
+        $this->returnJson($status, $message, $technicalMessage, $reservation->show($reservationId)[3]);
     }
 
     /**

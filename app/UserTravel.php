@@ -83,22 +83,32 @@ class UserTravel extends BaseModel
             $salt = str_random(64);
             $registrationCode = rand(10000, 99999);
 
+            if ($userData['socialMedia'] != NULL) {
+                $registrationStep = self::USER_REGISTRATION_STEP_VERIFIED;
+            } else {
+                $registrationStep = self::USER_REGISTRATION_STEP_REGISTERED;
+            }
+
             $id = DB::table($this->table)->insertGetId(
                 ['nama' => $userData['name'],
                     'nomor_handphone' => $userData['phone'],
                     'email' => $userData['email'],
                     'password' => hash('sha512', $salt . hash('md5', $userData['password'] . $salt)),
                     'salt' => $salt,
-                    'registration_step' => self::USER_REGISTRATION_STEP_REGISTERED,
+                    'registration_step' => $registrationStep,
                     'tipe' => self::USER_TYPE_USER,
                     'registration_code' => $registrationCode
                 ]
             );
-            if ($userData['phone'] != NULL) {
-                $this->sendSmsVerification($registrationCode, $userData['phone']);
-            } else if ($userData['email'] != NULL) {
-                $this->sendEmailVerification($registrationCode, $userData['email']);
+
+            if ($userData['socialMedia'] == NULL) {
+                if ($userData['phone'] != NULL) {
+                    $this->sendSmsVerification($registrationCode, $userData['phone']);
+                } else if ($userData['email'] != NULL) {
+                    $this->sendEmailVerification($registrationCode, $userData['email']);
+                }
             }
+
             return array(self::CODE_SUCCESS, self::RESULT_REGISTRATION_SUCCESS, $id);
         } catch (QueryException $ex) {
             return array(self::CODE_ERROR, self::RESULT_REGISTRATION_FAILED, $ex->getMessage());

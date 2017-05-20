@@ -58,6 +58,7 @@ class JadwalPerjalanan extends BaseModel
                 ->get()
                 ->toArray();
 
+            $kursiPerjalanan = new KursiPerjalanan();
             $distanceUtil = new DistanceUtil();
             for ($i = 0; $i < count($datas); $i++) {
                 $datas[$i]['operator_travel'] = DB::table('operator_travel')
@@ -99,6 +100,16 @@ class JadwalPerjalanan extends BaseModel
 //                print_r($address);die;
 //                $json = file_get_contents($address);
 //                print_r($json);die;
+
+                $tmpKursiPerjalanan = $kursiPerjalanan->getList($datas[$i]['id'])[3];
+                $datas[$i]['quota'] = 0;
+                if (count($tmpKursiPerjalanan) > 0) {
+                    for ($j = 0; $j < count($tmpKursiPerjalanan); $j++) {
+                        if ($tmpKursiPerjalanan[$j]['status'] == KursiPerjalanan::STATUS_AVAILABLE) {
+                            $datas[$i]['quota'] += 1;
+                        }
+                    }
+                }
             }
 
             // Menghitung total page dari semua data yg bisa diperoleh

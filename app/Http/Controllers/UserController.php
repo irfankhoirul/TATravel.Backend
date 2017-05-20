@@ -48,11 +48,11 @@ class UserController extends BaseController
         $userData['phone'] = $request->request->get('phone');
         $userData['email'] = $request->request->get('email');
         $userData['password'] = $request->request->get('password');
+        $userData['socialMedia'] = $request->request->get('socialMedia');
 
         if ($userData['phone'] == NULL && $userData['email'] == NULL) {
             $this->returnJsonErrorDataNotValid("Nomor Handphone atau Email tidak boleh kosong!");
         } else {
-
             $user = new UserTravel();
             list($status, $message, $technicalMessage) = $user->register($userData);
             if ($status == self::CODE_SUCCESS) {

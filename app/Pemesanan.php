@@ -101,15 +101,47 @@ class Pemesanan extends BaseModel
                 ->where('id', $id)
                 ->first();
             if ($reservation != NULL) {
-                $reservation['jadwal_perjalanan'] = DB::table('jadwal_perjalanan')
-                    ->where('id', $reservation['id_jadwal_perjalanan'])
+                $jadwalPerjalanan = new JadwalPerjalanan();
+
+                $reservation['user'] = DB::table('user')
+                    ->where('id', $reservation['id_user'])
                     ->first();
-                $reservation['jadwal_perjalanan']['operator_travel'] = DB::table('operator_travel')
-                    ->where('id', $reservation['jadwal_perjalanan']['id_operator_travel'])
-                    ->first();
+                $reservation['jadwal_perjalanan'] = $jadwalPerjalanan->show($reservation['id_jadwal_perjalanan'])[3];
                 $reservation['pembayaran'] = DB::table('pembayaran')
-                    ->where('id_pemesanan', $id)
+                    ->where('id_pemesanan', $reservation['id'])
                     ->first();
+                $reservation['lokasi_penjemputan'] = DB::table('lokasi_detail')
+                    ->where('tipe', 'P')
+                    ->where('id_jadwal_perjalanan', $reservation['jadwal_perjalanan']['id'])
+                    ->where('id_pemesanan', $reservation['id'])
+                    ->first();
+                $reservation['lokasi_pengantaran'] = DB::table('lokasi_detail')
+                    ->where('tipe', 'T')
+                    ->where('id_jadwal_perjalanan', $reservation['jadwal_perjalanan']['id'])
+                    ->where('id_pemesanan', $reservation['id'])
+                    ->first();
+
+                $tmpPenumpangPerjalanan = DB::table('penumpang_perjalanan')
+                    ->where('id_pemesanan', $reservation['id'])
+                    ->get();
+                $reservation['penumpang_perjalanan'] = json_decode(json_encode($tmpPenumpangPerjalanan), true);
+                for ($j = 0; $j < count($reservation['penumpang_perjalanan']); $j++) {
+                    $tmpPenumpang = DB::table('penumpang')
+                        ->where('id', $reservation['penumpang_perjalanan'][$j]['id_penumpang'])
+                        ->first();
+
+                    $reservation['penumpang_perjalanan'][$j]['penumpang'] = json_decode(json_encode($tmpPenumpang), true);
+
+                    $tmpKursiPerjalanan = DB::table('kursi_perjalanan')
+                        ->where('id_penumpang_perjalanan', $reservation['penumpang_perjalanan'][$j]['id'])
+                        ->first();
+
+                    $reservation['penumpang_perjalanan'][$j]['kursi_perjalanan'] = json_decode(json_encode($tmpKursiPerjalanan), true);
+                    $reservation['penumpang_perjalanan'][$j]['kursi_perjalanan']['kursi_mobil'] = DB::table('kursi_mobil')
+                        ->where('id', $reservation['penumpang_perjalanan'][$j]['kursi_perjalanan']['id_kursi_mobil'])
+                        ->first();
+                }
+
                 return array(self::CODE_SUCCESS, NULL, NULL, $reservation);
             } else {
                 return array(self::CODE_ERROR, "Tidak ada data", NULL, NULL);
@@ -124,27 +156,14 @@ class Pemesanan extends BaseModel
     {
         $limit = config('constant.DATA_PAGE_QUERY_LIMIT');
         try {
-//            if ($status == NULL) {
-//                $status = [
-//                    JadwalPerjalanan::STATUS_SCHEDULED,
-//                    JadwalPerjalanan::STATUS_ON_THE_WAY,
-//                    JadwalPerjalanan::STATUS_ARRIVED,
-//                    JadwalPerjalanan::STATUS_CANCELLED,
-//                    JadwalPerjalanan::STATUS_DELAYED,
-//                ];
-//            }
             // Count semua data, jika ada kriteria tertentu, masukkan disini
             $dataCount = DB::table($this->table)
                 ->where('id_user', $userId)
-//                ->join('jadwal_perjalanan', 'jadwal_perjalanan.id', '=', 'pemesanan.id_jadwal_perjalanan')
-//                ->whereIn('jadwal_perjalanan.status', $status)
                 ->count();
 
             // Get data sejumlah limit, jika ada kriteria tertentu, masukkan disini
             $datas = DB::table($this->table)
                 ->where('id_user', $userId)
-//                ->join('jadwal_perjalanan', 'jadwal_perjalanan.id', '=', 'pemesanan.id_jadwal_perjalanan')
-//                ->whereIn('jadwal_perjalanan.status', $status)
                 ->offset(($page - 1) * $limit)
                 ->limit($limit)
                 ->get()
