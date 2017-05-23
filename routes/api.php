@@ -120,7 +120,11 @@ Route::post('/operator-travel/departure-availability', 'OperatorTravelController
 Route::post('/operator-travel/destination-availability', 'OperatorTravelController@getDestinationAvailability');
 
 // Get List City
-Route::post('/city/list', 'KotaController@getList')
+Route::post('/province/list', 'ProvinsiController@getList')
+    ->middleware('auth.basic', 'auth.user');
+
+// Get List City
+Route::post('/province/{id}/city/list', 'KotaController@getList')
     ->middleware('auth.basic', 'auth.user');
 
 // Get list operator travel

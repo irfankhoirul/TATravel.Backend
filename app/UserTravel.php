@@ -69,14 +69,22 @@ class UserTravel extends BaseModel
             if ($userData['phone'] != NULL) {
                 $user = DB::table($this->table)->where('nomor_handphone', $userData['phone'])->first();
                 if ($user != NULL) {
-                    return array(self::CODE_ERROR, "Nomor Handphone yang Anda masukkan sudah digunakan untuk registrasi", NULL);
+                    if ($user['registration_step'] == self::USER_REGISTRATION_STEP_REGISTERED) {
+                        DB::table('user')->where('id', $user['id'])->delete();
+                    } else {
+                        return array(self::CODE_ERROR, "Nomor Handphone yang Anda masukkan sudah digunakan untuk registrasi", NULL);
+                    }
                 }
             }
 
             if ($userData['email'] != NULL) {
                 $user = DB::table($this->table)->where('email', $userData['email'])->first();
                 if ($user != NULL) {
-                    return array(self::CODE_ERROR, "Alamat Email yang Anda masukkan sudah digunakan untuk registrasi", NULL);
+                    if ($user['registration_step'] == self::USER_REGISTRATION_STEP_REGISTERED) {
+                        DB::table('user')->where('id', $user['id'])->delete();
+                    } else {
+                        return array(self::CODE_ERROR, "Alamat Email yang Anda masukkan sudah digunakan untuk registrasi", NULL);
+                    }
                 }
             }
 
@@ -84,8 +92,10 @@ class UserTravel extends BaseModel
             $registrationCode = rand(10000, 99999);
 
             if ($userData['socialMedia'] != NULL) {
+                $useSocialMedia = TRUE;
                 $registrationStep = self::USER_REGISTRATION_STEP_VERIFIED;
             } else {
+                $useSocialMedia = FALSE;
                 $registrationStep = self::USER_REGISTRATION_STEP_REGISTERED;
             }
 
@@ -97,7 +107,8 @@ class UserTravel extends BaseModel
                     'salt' => $salt,
                     'registration_step' => $registrationStep,
                     'tipe' => self::USER_TYPE_USER,
-                    'registration_code' => $registrationCode
+                    'registration_code' => $registrationCode,
+                    'use_social_login' => $useSocialMedia
                 ]
             );
 
@@ -115,7 +126,8 @@ class UserTravel extends BaseModel
         }
     }
 
-    public function sendSmsVerification($registrationCode, $phone)
+    public
+    function sendSmsVerification($registrationCode, $phone)
     {
         // Script http API SMS Reguler Zenziva
         $userkey = 'mu9z1h'; // userkey lihat di zenziva
@@ -138,7 +150,8 @@ class UserTravel extends BaseModel
         curl_close($curlHandle);
     }
 
-    public function sendEmailVerification($registrationCode, $targetEmail)
+    public
+    function sendEmailVerification($registrationCode, $targetEmail)
     {
         $email_sender = 'tatravel123@gmail.com';
         $email_pass = 'gvftfohsgjnizsff';
@@ -184,7 +197,8 @@ class UserTravel extends BaseModel
         Mail::setSwiftMailer($backup);
     }
 
-    public function verify($verificationData)
+    public
+    function verify($verificationData)
     {
         try {
             if ($verificationData['email'] != NULL) {
@@ -241,7 +255,8 @@ class UserTravel extends BaseModel
         }
     }
 
-    public function login($userData, $deviceSecretCode)
+    public
+    function login($userData, $deviceSecretCode)
     {
         // Validasi login
         try {
@@ -296,25 +311,44 @@ class UserTravel extends BaseModel
         }
     }
 
-    public function updateUser($id, $userData)
+    public
+    function updateUser($id, $userData)
     {
         $updateData = Array();
         $updateData['nama'] = $userData['nama'];
         if (!empty($userData['email'])) {
             $updateData['email'] = $userData['email'];
         }
-        if (!empty($userData['password'])) {
+        if (!empty($userData['nomor_handphone'])) {
+            $updateData['nomor_handphone'] = $userData['nomor_handphone'];
+        }
+        if (!empty($userData['old_password']) && !empty($userData['new_password'])) {
             $user = DB::table($this->table)->where('id', $id)->first();
-            $updateData['password'] = hash('sha512', $user['salt'] . hash('md5', $userData['password'] . $user['salt']));
+            if ($user['password'] == hash('sha512', $user['salt'] . hash('md5', $userData['old_password'] . $user['salt']))) {
+                $updateData['password'] = hash('sha512', $user['salt'] . hash('md5', $userData['new_password'] . $user['salt']));
+            } else {
+                return array(self::CODE_ERROR, "Password lama salah!", NULL, NULL);
+            }
         }
         if (!empty($userData['alamat'])) {
             $updateData['alamat'] = $userData['alamat'];
         }
-        if (!empty($userData['id_kota'])) {
-            $updateData['id_kota'] = $userData['id_kota'];
-        }
-        if (!empty($userData['id_provinsi'])) {
-            $updateData['id_provinsi'] = $userData['id_provinsi'];
+        if (!empty($userData['provinsi'])) {
+            $provinsi = DB::table('provinsi')
+                ->where('nama', $userData['provinsi'])
+                ->first();
+            if ($provinsi != NULL) {
+                $updateData['id_provinsi'] = $provinsi['id'];
+
+                if (!empty($userData['kota'])) {
+                    $kota = DB::table('kota')
+                        ->where('nama', $userData['kota'])
+                        ->first();
+                    if ($kota != NULL) {
+                        $updateData['id_kota'] = $kota['id'];
+                    }
+                }
+            }
         }
 
         try {
@@ -328,7 +362,8 @@ class UserTravel extends BaseModel
         }
     }
 
-    public function show($id)
+    public
+    function show($id)
     {
         try {
             $user = DB::table($this->table)->where('id', $id)->first();
@@ -338,7 +373,6 @@ class UserTravel extends BaseModel
             if (!empty($user['id_provinsi'])) {
                 $user['provinsi'] = DB::table('provinsi')->where('id', $user['id_provinsi'])->first();
             }
-
 
             if ($user['tipe'] == self::USER_TYPE_USER) {
                 return array(self::CODE_SUCCESS, self::RESULT_GET_PROFILE_SUCCESS, NULL, $user);
@@ -356,7 +390,8 @@ class UserTravel extends BaseModel
         }
     }
 
-    public function loginDriver($userData, $deviceSecretCode)
+    public
+    function loginDriver($userData, $deviceSecretCode)
     {
         // Validasi login
         try {
@@ -398,7 +433,8 @@ class UserTravel extends BaseModel
         }
     }
 
-    public function logout($token)
+    public
+    function logout($token)
     {
         try {
             $tokenData = DB::table('user_token')->where('token', $token)->first();

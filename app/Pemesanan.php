@@ -37,7 +37,7 @@ class Pemesanan extends BaseModel
 
                 DB::table('kursi_perjalanan')
                     ->where('id', $seatIds[$i])
-                    ->update(['status' => 'U', 'id_penumpang_perjalanan' => $idPenumpangPerjalanan]);
+                    ->update(['status' => KursiPerjalanan::STATUS_UNAVAILABLE, 'id_penumpang_perjalanan' => $idPenumpangPerjalanan]);
 
                 // Insert data lokasi penjemputan
                 $idPickUpLocation = DB::table('lokasi_detail')->insertGetId(
@@ -62,12 +62,6 @@ class Pemesanan extends BaseModel
                         'id_pemesanan' => $id
                     ]
                 );
-            }
-
-            // Update seat, set unavailable
-
-            for ($i = 0; $i < count($seatIds); $i++) {
-
             }
 
             return array(self::CODE_SUCCESS, NULL, $id);
@@ -175,9 +169,10 @@ class Pemesanan extends BaseModel
                     ->where('id', $datas[$i]['id_user'])
                     ->first();
                 $datas[$i]['jadwal_perjalanan'] = $jadwalPerjalanan->show($datas[$i]['id_jadwal_perjalanan'])[3];
-                $datas[$i]['pembayaran'] = DB::table('pembayaran')
+                $tmpPembayaran = DB::table('pembayaran')
                     ->where('id_pemesanan', $datas[$i]['id'])
                     ->first();
+                $datas[$i]['pembayaran'] = json_decode(json_encode($tmpPembayaran), true);
                 $datas[$i]['lokasi_penjemputan'] = DB::table('lokasi_detail')
                     ->where('tipe', 'P')
                     ->where('id_jadwal_perjalanan', $datas[$i]['jadwal_perjalanan']['id'])
@@ -193,6 +188,7 @@ class Pemesanan extends BaseModel
                     ->where('id_pemesanan', $datas[$i]['id'])
                     ->get();
                 $datas[$i]['penumpang_perjalanan'] = json_decode(json_encode($tmpPenumpangPerjalanan), true);
+                $statusPembayaran = $datas[$i]['pembayaran']['status'];
                 for ($j = 0; $j < count($datas[$i]['penumpang_perjalanan']); $j++) {
                     $tmpPenumpang = DB::table('penumpang')
                         ->where('id', $datas[$i]['penumpang_perjalanan'][$j]['id_penumpang'])
@@ -205,6 +201,21 @@ class Pemesanan extends BaseModel
                         ->first();
 
                     $datas[$i]['penumpang_perjalanan'][$j]['kursi_perjalanan'] = json_decode(json_encode($tmpKursiPerjalanan), true);
+
+                    $tmpKursiPerjalanan = $datas[$i]['penumpang_perjalanan'][$j]['kursi_perjalanan'];
+
+                    $updateTime = strtotime($tmpKursiPerjalanan['updated_at']);
+                    $now = new \DateTime(null, new \DateTimeZone('Asia/Jakarta'));
+                    $nowMicro = strtotime($now->format('m/d/Y H:i:s'));
+                    $bookTimeDifference = $nowMicro - $updateTime;
+
+                    if ($tmpKursiPerjalanan['status'] == KursiPerjalanan::STATUS_UNAVAILABLE ||
+                        ($tmpKursiPerjalanan['updated_at'] != NULL && $bookTimeDifference > KursiPerjalanan::PAYMENT_TIME_LIMIT)
+                    ) {
+                        $statusPembayaran = Pembayaran::PAYMENT_STATUS_TIMEOUT;
+                    }
+                    $datas[$i]['pembayaran']['status'] = $statusPembayaran;
+
                     $datas[$i]['penumpang_perjalanan'][$j]['kursi_perjalanan']['kursi_mobil'] = DB::table('kursi_mobil')
                         ->where('id', $datas[$i]['penumpang_perjalanan'][$j]['kursi_perjalanan']['id_kursi_mobil'])
                         ->first();

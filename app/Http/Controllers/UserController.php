@@ -144,24 +144,23 @@ class UserController extends BaseController
     public function update($id, Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|max:128',
+            'nama' => 'required|max:128',
             'email' => 'max:128',
-            'password' => 'max:128',
-            'alamat' => 'max:128',
-            'cityid' => 'digits',
-            'provinceId' => 'digits'
+            'alamat' => 'max:128'
         ]);
 
         if ($validator->fails()) {
             $this->returnJsonErrorDataNotValid($validator->errors());
         }
 
-        $userData['nama'] = $request->request->get('name');
+        $userData['nama'] = $request->request->get('nama');
         $userData['email'] = $request->request->get('email');
-        $userData['password'] = $request->request->get('password');
+        $userData['old_password'] = $request->request->get('old_password');
+        $userData['new_password'] = $request->request->get('new_password');
+        $userData['nomor_handphone'] = $request->request->get('nomor_handphone');
         $userData['alamat'] = $request->request->get('alamat');
-        $userData['id_kota'] = $request->request->get('cityid');
-        $userData['id_provinsi'] = $request->request->get('provinceId');
+        $userData['kota'] = $request->request->get('kota');
+        $userData['provinsi'] = $request->request->get('provinsi');
 
         $user = new UserTravel();
         if ($user->isTokenOwner($id, $request->request->get('token'))) {
